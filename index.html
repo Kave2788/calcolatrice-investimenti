@@ -628,13 +628,6 @@
                         </label>
                         <input type="number" id="careerAdjGenerale" value="1.0" step="0.1" min="0">
                     </div>
-                    <div class="input-group">
-                        <label>
-                            TFR % del RAL Annuo
-                            <span class="hint">Per legge italiana: RAL ÷ 13.5 ≈ 7.41%. Personalizzabile se necessario</span>
-                        </label>
-                        <input type="number" id="tfrPercRAL" value="7.41" step="0.1" min="0">
-                    </div>
                 </div>
             </div>
 
@@ -653,27 +646,19 @@
                         <input type="number" id="tfrInitial" value="0" step="100" min="0">
                     </div>
                     <div class="input-group">
-                        <label>
-                            Rendimento Annuo Lordo (%)
-                            <span class="hint">Rivalutazione TFR di legge: 1.5% + 75% inflazione</span>
-                        </label>
-                        <input type="number" id="tfrRateGross" value="2.5" step="0.1" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Costi di Gestione (%)</label>
-                        <input type="number" id="tfrCosts" value="0" step="0.1" min="0">
-                    </div>
-                    <div class="input-group">
                         <label>Anni di Lavoro</label>
                         <input type="number" id="tfrYears" value="40" step="1" min="1">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Aliquota IRPEF (%)
+                            <span class="hint">17-43% a seconda del reddito. Usa 23% come media</span>
+                        </label>
+                        <input type="number" id="tfrTaxRate" value="23" step="0.5" min="0" max="100">
                     </div>
 
                     <div class="subsection results">
                         <div class="subsection-title">📈 Risultati</div>
-                        <div class="calculation-row">
-                            <span class="row-label">Rendimento Annuo Netto</span>
-                            <span class="value" id="tfrNetRate">2.50%</span>
-                        </div>
                         <div class="calculation-row">
                             <span class="row-label">Quota TFR Annua (RAL ÷ 13.5)</span>
                             <span class="value euro" id="tfrAnnualQuota">€ 0,00</span>
@@ -681,6 +666,14 @@
                         <div class="calculation-row">
                             <span class="row-label">Totale Versamenti TFR</span>
                             <span class="value euro" id="tfrTotalContrib">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row highlight">
+                            <span class="row-label">Capitale Finale Lordo</span>
+                            <span class="value euro" id="tfrCapitalGross">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="row-label">Tasse su TFR</span>
+                            <span class="value euro" id="tfrTaxes">€ 0,00</span>
                         </div>
                         <div class="calculation-row total">
                             <span class="row-label">Capitale Finale Netto</span>
@@ -843,6 +836,10 @@
                         <div class="calculation-row">
                             <span class="row-label">Guadagno Annuo Netto Medio</span>
                             <span class="value euro" id="cdAnnualNet">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row highlight">
+                            <span class="row-label">Capitale Finale Lordo</span>
+                            <span class="value euro" id="cdCapitalGross">€ 0,00</span>
                         </div>
                         <div class="calculation-row total">
                             <span class="row-label">Capitale Finale Netto</span>
@@ -1031,17 +1028,15 @@
         function calculateTFRWithoutPension() {
             const initialCapital = getNum('tfrInitial');
             const ral = getNum('ralGenerale');
-            const rateGross = getNum('tfrRateGross');
-            const costs = getNum('tfrCosts');
             const careerAdj = getNum('careerAdjGenerale');
             const years = getInt('tfrYears');
+            const taxRate = getNum('tfrTaxRate');
 
-            const netRate = rateGross - costs;
-            const netRateDecimal = netRate / 100;
+            const rateDecimal = 1.5 / 100; // Rivalutazione TFR di legge 1.5% + 75% inflazione
             const careerAdjDecimal = careerAdj / 100;
 
             // Quota TFR annua = RAL × (TFR% / 100)
-            const tfrPercent = getNum('tfrPercRAL') / 100;
+            const tfrPercent = 7.41 / 100; // TFR % per legge italiana
             const annualQuotaBase = ral * tfrPercent;
 
             // Simulazione anno per anno
@@ -1051,22 +1046,28 @@
 
             for (let year = 1; year <= years; year++) {
                 const yearQuota = currentRAL / 13.5;
-                capital = capital * (1 + netRateDecimal);
+                capital = capital * (1 + rateDecimal);
                 capital += yearQuota;
                 totalContrib += yearQuota;
                 currentRAL = currentRAL * (1 + careerAdjDecimal);
             }
 
-            document.getElementById('tfrNetRate').textContent = formatPercent(netRate);
+            // Tassazione sul totale del TFR (tassazione sostitutiva)
+            const capitalGain = capital - initialCapital - totalContrib;
+            const taxes = Math.max(0, capital * (taxRate / 100));
+            const capitalNet = capital - taxes;
+
             document.getElementById('tfrAnnualQuota').textContent = formatCurrency(annualQuotaBase);
             document.getElementById('tfrTotalContrib').textContent = formatCurrency(totalContrib);
-            document.getElementById('tfrFinalCapital').textContent = formatCurrency(capital);
+            document.getElementById('tfrCapitalGross').textContent = formatCurrency(capital);
+            document.getElementById('tfrTaxes').textContent = formatCurrency(taxes);
+            document.getElementById('tfrFinalCapital').textContent = formatCurrency(capitalNet);
 
             return {
                 initial: initialCapital,
                 contrib: totalContrib,
-                gain: capital - initialCapital - totalContrib,
-                final: capital
+                gain: capitalNet - initialCapital - totalContrib,
+                final: capitalNet
             };
         }
 
@@ -1085,7 +1086,7 @@
             // TFR auto da sezione "Dati Generali": RAL × (TFR% / 100) con adeguamento carriera annuo
             const baseRAL = getNum('ralGenerale');
             const careerAdjDecimal = getNum('careerAdjGenerale') / 100;
-            const tfrPercent = getNum('tfrPercRAL') / 100;
+            const tfrPercent = 7.41 / 100; // TFR % per legge italiana
             
             const pensionTaxRate = getNum('pensionTaxRate');
             const pensionYears = getInt('pensionYears');
@@ -1177,6 +1178,8 @@
             const annualGross = years > 0 ? interestGross / years : 0;
             const annualNet = years > 0 ? (interestNet - stampTax) / years : 0;
 
+            const capitalGross = initialCapital + interestGross;
+
             document.getElementById('cdStampTax').textContent = formatCurrency(stampTax);
             document.getElementById('cdInterestTax').textContent = formatCurrency(interestTax);
             document.getElementById('cdTotalTaxes').textContent = formatCurrency(totalTaxes);
@@ -1184,6 +1187,7 @@
             document.getElementById('cdInterestNet').textContent = formatCurrency(interestNet);
             document.getElementById('cdAnnualGross').textContent = formatCurrency(annualGross);
             document.getElementById('cdAnnualNet').textContent = formatCurrency(annualNet);
+            document.getElementById('cdCapitalGross').textContent = formatCurrency(capitalGross);
             document.getElementById('cdFinalCapital').textContent = formatCurrency(capitalNet);
 
             return {
