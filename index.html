@@ -379,10 +379,22 @@
             font-size: 0.92em;
         }
 
+        .comparison-table td:first-child {
+            text-align: center;
+            padding: 12px 8px;
+            width: 40px;
+        }
+
         .comparison-table td:not(:first-child) {
             text-align: right;
             font-family: 'Courier New', monospace;
             font-weight: 500;
+        }
+
+        .scenario-toggle {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         .comparison-table tbody tr:hover {
@@ -595,6 +607,37 @@
 
         <div class="sections">
 
+            <!-- SEZIONE DATI GENERALI -->
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <span class="title">📋 Dati Generali</span>
+                    <span class="icon">▼</span>
+                </div>
+                <div class="section-content">
+                    <div class="input-group">
+                        <label>
+                            RAL - Reddito Annuo Lordo (€)
+                            <span class="hint">Usato sia per TFR Senza Fondo che per quota TFR del Fondo Pensione</span>
+                        </label>
+                        <input type="number" id="ralGenerale" value="35000" step="500" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Adeguamento Carriera Annuo (%)
+                            <span class="hint">Crescita stipendio annua. Influenza la quota TFR ogni anno</span>
+                        </label>
+                        <input type="number" id="careerAdjGenerale" value="1.0" step="0.1" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            TFR % del RAL Annuo
+                            <span class="hint">Per legge italiana: RAL ÷ 13.5 ≈ 7.41%. Personalizzabile se necessario</span>
+                        </label>
+                        <input type="number" id="tfrPercRAL" value="7.41" step="0.1" min="0">
+                    </div>
+                </div>
+            </div>
+
             <!-- SEZIONE TFR SENZA FONDO -->
             <div class="section">
                 <div class="section-header" onclick="toggleSection(this)">
@@ -610,10 +653,6 @@
                         <input type="number" id="tfrInitial" value="0" step="100" min="0">
                     </div>
                     <div class="input-group">
-                        <label>RAL - Reddito Annuo Lordo (€)</label>
-                        <input type="number" id="tfrRAL" value="35000" step="500" min="0">
-                    </div>
-                    <div class="input-group">
                         <label>
                             Rendimento Annuo Lordo (%)
                             <span class="hint">Rivalutazione TFR di legge: 1.5% + 75% inflazione</span>
@@ -623,10 +662,6 @@
                     <div class="input-group">
                         <label>Costi di Gestione (%)</label>
                         <input type="number" id="tfrCosts" value="0" step="0.1" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Adeguamento Carriera Annuo (%)</label>
-                        <input type="number" id="tfrCareerAdj" value="1.0" step="0.1" min="0">
                     </div>
                     <div class="input-group">
                         <label>Anni di Lavoro</label>
@@ -687,30 +722,23 @@
                     </div>
 
                     <div class="subsection">
-                        <div class="subsection-title">👤 Contributi Annuali (Fase 1)</div>
+                        <div class="subsection-title">👤 Contributi Annuali</div>
                         <div class="input-group">
-                            <label>Contributo Dipendente Lordo (€/anno)</label>
-                            <input type="number" id="empContribYear" value="1200" step="100" min="0">
+                            <span class="hint">📌 TFR e contributi calcolati in automatico in base alle % del RAL. Adeguamento carriera applica ogni anno. Recupero fiscale 7.30% solo su contributi dipendente+azienda (TFR escluso).</span>
                         </div>
                         <div class="input-group">
-                            <label>Contributo Azienda Lordo (€/anno)</label>
-                            <input type="number" id="compContribYear" value="1800" step="100" min="0">
-                        </div>
-                    </div>
-
-                    <div class="subsection">
-                        <div class="subsection-title">🔄 Modifica Contributi (Fase 2)</div>
-                        <div class="input-group">
-                            <label>Dopo quanti anni?</label>
-                            <input type="number" id="pensionModifyYear" value="20" step="1" min="0">
+                            <label>
+                                Percentuale Contributo Dipendente (% RAL)
+                                <span class="hint">Es. 3.4% di RAL 35.000 → ~1.190 €/anno</span>
+                            </label>
+                            <input type="number" id="empContribPercent" value="3.4" step="0.1" min="0">
                         </div>
                         <div class="input-group">
-                            <label>Nuovo Contributo Dipendente (€/anno)</label>
-                            <input type="number" id="empContribYearModified" value="2000" step="100" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>Nuovo Contributo Azienda (€/anno)</label>
-                            <input type="number" id="compContribYearModified" value="2500" step="100" min="0">
+                            <label>
+                                Percentuale Contributo Azienda (% RAL)
+                                <span class="hint">Es. 5.1% di RAL 35.000 → ~1.785 €/anno</span>
+                            </label>
+                            <input type="number" id="compContribPercent" value="5.1" step="0.1" min="0">
                         </div>
                     </div>
 
@@ -740,7 +768,11 @@
                             <span class="value euro" id="pensionTaxRecoveryTotal">€ 0,00</span>
                         </div>
                         <div class="calculation-row">
-                            <span class="row-label">Totale Contributi Versati</span>
+                            <span class="row-label">TFR Conferito Totale</span>
+                            <span class="value euro" id="pensionTotalTFR">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="row-label">Totale Contributi Versati (incl. TFR)</span>
                             <span class="value euro" id="pensionTotalContrib">€ 0,00</span>
                         </div>
                         <div class="calculation-row highlight">
@@ -894,6 +926,7 @@
                 <table class="comparison-table">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Scenario</th>
                             <th>Capitale Iniziale</th>
                             <th>Contributi</th>
@@ -903,6 +936,7 @@
                     </thead>
                     <tbody>
                         <tr>
+                            <td><input type="checkbox" id="compareTFRNo" checked class="scenario-toggle"></td>
                             <td><span class="scenario-tag tfr-no">TFR Senza Fondo</span></td>
                             <td class="euro" id="table-tfr-initial">€ 0,00</td>
                             <td class="euro" id="table-tfr-contrib">€ 0,00</td>
@@ -910,6 +944,7 @@
                             <td class="euro" id="table-tfr-final"><strong>€ 0,00</strong></td>
                         </tr>
                         <tr>
+                            <td><input type="checkbox" id="comparePension" checked class="scenario-toggle"></td>
                             <td><span class="scenario-tag tfr-yes">TFR Con Fondo</span></td>
                             <td class="euro" id="table-pension-initial">€ 0,00</td>
                             <td class="euro" id="table-pension-contrib">€ 0,00</td>
@@ -917,6 +952,7 @@
                             <td class="euro" id="table-pension-final"><strong>€ 0,00</strong></td>
                         </tr>
                         <tr>
+                            <td><input type="checkbox" id="compareCD" checked class="scenario-toggle"></td>
                             <td><span class="scenario-tag cd">Conto Deposito</span></td>
                             <td class="euro" id="table-cd-initial">€ 0,00</td>
                             <td class="euro" id="table-cd-contrib">€ 0,00</td>
@@ -924,6 +960,7 @@
                             <td class="euro" id="table-cd-final"><strong>€ 0,00</strong></td>
                         </tr>
                         <tr>
+                            <td><input type="checkbox" id="comparePAC" checked class="scenario-toggle"></td>
                             <td><span class="scenario-tag pac">PAC</span></td>
                             <td class="euro" id="table-pac-initial">€ 0,00</td>
                             <td class="euro" id="table-pac-contrib">€ 0,00</td>
@@ -993,18 +1030,19 @@
         // ========================================
         function calculateTFRWithoutPension() {
             const initialCapital = getNum('tfrInitial');
-            const ral = getNum('tfrRAL');
+            const ral = getNum('ralGenerale');
             const rateGross = getNum('tfrRateGross');
             const costs = getNum('tfrCosts');
-            const careerAdj = getNum('tfrCareerAdj');
+            const careerAdj = getNum('careerAdjGenerale');
             const years = getInt('tfrYears');
 
             const netRate = rateGross - costs;
             const netRateDecimal = netRate / 100;
             const careerAdjDecimal = careerAdj / 100;
 
-            // Quota TFR annua = RAL / 13.5 (formula di legge italiana)
-            const annualQuotaBase = ral / 13.5;
+            // Quota TFR annua = RAL × (TFR% / 100)
+            const tfrPercent = getNum('tfrPercRAL') / 100;
+            const annualQuotaBase = ral * tfrPercent;
 
             // Simulazione anno per anno
             let capital = initialCapital;
@@ -1040,12 +1078,14 @@
             const pensionCosts = getNum('pensionCosts');
             const pensionRateGross = getNum('pensionRateGross');
             
-            const empContribYear = getNum('empContribYear');
-            const compContribYear = getNum('compContribYear');
-            
-            const modifyYear = getInt('pensionModifyYear');
-            const empContribYearModified = getNum('empContribYearModified');
-            const compContribYearModified = getNum('compContribYearModified');
+            // Contributi auto da sezione "Dati Generali": % del RAL
+            const empContribPercent = getNum('empContribPercent') / 100;
+            const compContribPercent = getNum('compContribPercent') / 100;
+
+            // TFR auto da sezione "Dati Generali": RAL × (TFR% / 100) con adeguamento carriera annuo
+            const baseRAL = getNum('ralGenerale');
+            const careerAdjDecimal = getNum('careerAdjGenerale') / 100;
+            const tfrPercent = getNum('tfrPercRAL') / 100;
             
             const pensionTaxRate = getNum('pensionTaxRate');
             const pensionYears = getInt('pensionYears');
@@ -1055,26 +1095,28 @@
 
             let capital = initialCapital;
             let totalContrib = 0;
+            let totalTFR = 0;
             let totalTaxRecovery = 0;
 
             for (let year = 1; year <= pensionYears; year++) {
                 capital = capital * (1 + netRateDecimal);
 
-                let empContrib, compContrib;
-                if (year <= modifyYear) {
-                    empContrib = empContribYear;
-                    compContrib = compContribYear;
-                } else {
-                    empContrib = empContribYearModified;
-                    compContrib = compContribYearModified;
-                }
+                // RAL cresce con adeguamento carriera
+                const ralYear = baseRAL * Math.pow(1 + careerAdjDecimal, year - 1);
 
-                const yearContrib = empContrib + compContrib;
+                // Contributi auto-calcolati come % del RAL anno
+                const empContrib = ralYear * empContribPercent;
+                const compContrib = ralYear * compContribPercent;
+                const tfrContrib = ralYear * tfrPercent;
+
+                const yearVoluntary = empContrib + compContrib;
+                const yearContrib = yearVoluntary + tfrContrib;
                 capital += yearContrib;
                 totalContrib += yearContrib;
+                totalTFR += tfrContrib;
 
-                // Recupero fiscale 7.30% su contributi totali
-                const taxRecovery = yearContrib * 0.073;
+                // Recupero fiscale 7.30% solo su contributi volontari (TFR escluso, già pre-tax)
+                const taxRecovery = yearVoluntary * 0.073;
                 totalTaxRecovery += taxRecovery;
                 capital += taxRecovery;
             }
@@ -1089,6 +1131,7 @@
             document.getElementById('pensionNetRate').textContent = formatPercent(netRate);
             document.getElementById('pensionTaxRecovery').textContent = formatCurrency(annualTaxRecoveryAvg);
             document.getElementById('pensionTaxRecoveryTotal').textContent = formatCurrency(totalTaxRecovery);
+            document.getElementById('pensionTotalTFR').textContent = formatCurrency(totalTFR);
             document.getElementById('pensionTotalContrib').textContent = formatCurrency(totalContrib);
             document.getElementById('pensionCapitalGross').textContent = formatCurrency(capital);
             document.getElementById('pensionCapitalNet').textContent = formatCurrency(capitalNet);
@@ -1220,13 +1263,23 @@
             document.getElementById('table-pac-gain').textContent = formatCurrency(pac.gain);
             document.getElementById('table-pac-final').innerHTML = '<strong>' + formatCurrency(pac.final) + '</strong>';
 
-            const bestTfr = Math.max(tfr.final, pension.final);
-            const grandTotal = bestTfr + conto.final + pac.final;
+            // Calcolo totale con checkboxes
+            const checkTFRNo = document.getElementById('compareTFRNo').checked;
+            const checkPension = document.getElementById('comparePension').checked;
+            const checkCD = document.getElementById('compareCD').checked;
+            const checkPAC = document.getElementById('comparePAC').checked;
+
+            const tfrToShow = checkTFRNo ? tfr.final : 0;
+            const pensionToShow = checkPension ? pension.final : 0;
+            const cdToShow = checkCD ? conto.final : 0;
+            const pacToShow = checkPAC ? pac.final : 0;
+
+            const grandTotal = tfrToShow + pensionToShow + cdToShow + pacToShow;
 
             document.getElementById('grandTotal').textContent = formatCurrency(grandTotal);
-            document.getElementById('grandTotal-tfr').textContent = formatCurrency(bestTfr);
-            document.getElementById('grandTotal-cd').textContent = formatCurrency(conto.final);
-            document.getElementById('grandTotal-pac').textContent = formatCurrency(pac.final);
+            document.getElementById('grandTotal-tfr').textContent = formatCurrency(Math.max(tfrToShow, pensionToShow));
+            document.getElementById('grandTotal-cd').textContent = formatCurrency(cdToShow);
+            document.getElementById('grandTotal-pac').textContent = formatCurrency(pacToShow);
 
             updateChart(tfr.final, pension.final, conto.final, pac.final);
         }
@@ -1336,7 +1389,13 @@
 
         function readState() {
             const obj = {};
+            // Numero inputs
             allInputs().forEach(el => { obj[el.id] = el.value; });
+            // Checkboxes scenario
+            ['compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) obj[id] = el.checked;
+            });
             return obj;
         }
 
@@ -1344,7 +1403,12 @@
             if (!state) return;
             Object.entries(state).forEach(([id, val]) => {
                 const el = document.getElementById(id);
-                if (el) el.value = val;
+                if (!el) return;
+                if (el.type === 'checkbox') {
+                    el.checked = Boolean(val);
+                } else {
+                    el.value = val;
+                }
             });
         }
 
@@ -1446,6 +1510,17 @@
                 saveLocal();
                 saveCloudDebounced();
             });
+        });
+
+        // Scenario toggles
+        ['compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', () => {
+                    updateAll();
+                    saveLocal();
+                });
+            }
         });
 
         // 3) initial calc
