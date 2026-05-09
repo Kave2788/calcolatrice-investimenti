@@ -694,6 +694,21 @@
                     <div class="subsection">
                         <div class="subsection-title">⚙️ Parametri Fondo</div>
                         <div class="input-group">
+                            <label>Fondo Pensione <span class="hint">Seleziona un fondo dalla lista COVIP o "Personalizzato"</span></label>
+                            <select id="pensionFundSelect">
+                                <option value="custom">Personalizzato</option>
+                                <option value="allianz">Allianz Previdenza (0.75%)</option>
+                                <option value="generali">Generali Global (0.90%)</option>
+                                <option value="intesa">Intesa Sanpaolo (0.80%)</option>
+                                <option value="unicredit">UniCredit FPA (0.85%)</option>
+                                <option value="unipol">Unipol Previdenza (0.70%)</option>
+                                <option value="credem">Credem Destinazione Futuro (0.88%)</option>
+                                <option value="arca">Arca Previdenza (0.95%)</option>
+                                <option value="zurich">Zurich Contribution (1.10%)</option>
+                                <option value="axa">AXA Previdenza Per Te (1.00%)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
                             <label>
                                 Capitale Già Presente nel Fondo (€)
                                 <span class="hint">Lascia 0 se parti da zero</span>
@@ -717,7 +732,7 @@
                     <div class="subsection">
                         <div class="subsection-title">👤 Contributi Annuali</div>
                         <div class="input-group">
-                            <span class="hint">📌 TFR e contributi calcolati in automatico in base alle % del RAL. Adeguamento carriera applica ogni anno. Recupero fiscale 7.30% solo su contributi dipendente+azienda (TFR escluso).</span>
+                            <span class="hint">📌 TFR e contributi calcolati in automatico in base alle % del RAL. Adeguamento carriera applica ogni anno. Beneficio fiscale Modello 730 su contributi dipendente+azienda fino a limite deducibilità.</span>
                         </div>
                         <div class="input-group">
                             <label>
@@ -744,6 +759,13 @@
                             </label>
                             <input type="number" id="pensionTaxRate" value="15" step="0.5" min="0">
                         </div>
+                        <div class="input-group">
+                            <label>
+                                Aliquota IRPEF per Deducibilità (%)
+                                <span class="hint">17-43% a seconda del reddito. Usa 23% come media</span>
+                            </label>
+                            <input type="number" id="pensionIRPEFRate" value="23" step="0.5" min="0" max="100">
+                        </div>
                     </div>
 
                     <div class="subsection results">
@@ -753,12 +775,20 @@
                             <span class="value" id="pensionNetRate">2.50%</span>
                         </div>
                         <div class="calculation-row">
-                            <span class="row-label">Recupero Fiscale 7.30% (medio annuo)</span>
+                            <span class="row-label">Beneficio Fiscale Modello 730 (medio annuo)</span>
                             <span class="value euro" id="pensionTaxRecovery">€ 0,00</span>
                         </div>
                         <div class="calculation-row">
-                            <span class="row-label">Recupero Fiscale Totale</span>
+                            <span class="row-label">Beneficio Fiscale Totale</span>
                             <span class="value euro" id="pensionTaxRecoveryTotal">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="row-label">Versamenti Dipendente Totali</span>
+                            <span class="value euro" id="pensionTotalEmpContrib">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="row-label">Versamenti Azienda Totali</span>
+                            <span class="value euro" id="pensionTotalCompContrib">€ 0,00</span>
                         </div>
                         <div class="calculation-row">
                             <span class="row-label">TFR Conferito Totale</span>
@@ -1078,7 +1108,7 @@
             const initialCapital = getNum('pensionInitial');
             const pensionCosts = getNum('pensionCosts');
             const pensionRateGross = getNum('pensionRateGross');
-            
+
             // Contributi auto da sezione "Dati Generali": % del RAL
             const empContribPercent = getNum('empContribPercent') / 100;
             const compContribPercent = getNum('compContribPercent') / 100;
@@ -1087,8 +1117,9 @@
             const baseRAL = getNum('ralGenerale');
             const careerAdjDecimal = getNum('careerAdjGenerale') / 100;
             const tfrPercent = 7.41 / 100; // TFR % per legge italiana
-            
+
             const pensionTaxRate = getNum('pensionTaxRate');
+            const irpefRate = getNum('pensionIRPEFRate') / 100;
             const pensionYears = getInt('pensionYears');
 
             const netRate = pensionRateGross - pensionCosts;
@@ -1096,6 +1127,8 @@
 
             let capital = initialCapital;
             let totalContrib = 0;
+            let totalEmpContrib = 0;
+            let totalCompContrib = 0;
             let totalTFR = 0;
             let totalTaxRecovery = 0;
 
@@ -1114,12 +1147,14 @@
                 const yearContrib = yearVoluntary + tfrContrib;
                 capital += yearContrib;
                 totalContrib += yearContrib;
+                totalEmpContrib += empContrib;
+                totalCompContrib += compContrib;
                 totalTFR += tfrContrib;
 
-                // Recupero fiscale 7.30% solo su contributi volontari (TFR escluso, già pre-tax)
-                const taxRecovery = yearVoluntary * 0.073;
-                totalTaxRecovery += taxRecovery;
-                capital += taxRecovery;
+                // Beneficio fiscale Modello 730: aliquota IRPEF su contributi dipendente e azienda
+                const taxBenefit = yearVoluntary * irpefRate;
+                totalTaxRecovery += taxBenefit;
+                capital += taxBenefit;
             }
 
             // Tassazione SOLO sul capital gain
@@ -1132,6 +1167,8 @@
             document.getElementById('pensionNetRate').textContent = formatPercent(netRate);
             document.getElementById('pensionTaxRecovery').textContent = formatCurrency(annualTaxRecoveryAvg);
             document.getElementById('pensionTaxRecoveryTotal').textContent = formatCurrency(totalTaxRecovery);
+            document.getElementById('pensionTotalEmpContrib').textContent = formatCurrency(totalEmpContrib);
+            document.getElementById('pensionTotalCompContrib').textContent = formatCurrency(totalCompContrib);
             document.getElementById('pensionTotalTFR').textContent = formatCurrency(totalTFR);
             document.getElementById('pensionTotalContrib').textContent = formatCurrency(totalContrib);
             document.getElementById('pensionCapitalGross').textContent = formatCurrency(capital);
@@ -1237,6 +1274,30 @@
                 final: capitalNet
             };
         }
+
+        // ========================================
+        // FONDI PENSIONE COVIP
+        // ========================================
+        const pensionFunds = {
+            custom: null,
+            allianz: 0.75,
+            generali: 0.90,
+            intesa: 0.80,
+            unicredit: 0.85,
+            unipol: 0.70,
+            credem: 0.88,
+            arca: 0.95,
+            zurich: 1.10,
+            axa: 1.00
+        };
+
+        document.getElementById('pensionFundSelect').addEventListener('change', (e) => {
+            const fundKey = e.target.value;
+            if (fundKey !== 'custom' && pensionFunds[fundKey]) {
+                document.getElementById('pensionCosts').value = pensionFunds[fundKey];
+                updateAll();
+            }
+        });
 
         // ========================================
         // AGGIORNA TUTTO
