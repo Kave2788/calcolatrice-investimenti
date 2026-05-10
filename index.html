@@ -831,6 +831,14 @@
                             <span class="value euro" id="pensionTaxRecoveryTotal">€ 0,00</span>
                         </div>
                         <div class="calculation-row">
+                            <span class="row-label">Versamento Annuo Personale (medio)</span>
+                            <span class="value euro" id="pensionAnnualEmpContrib">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="row-label">Versamento Annuo Azienda (medio)</span>
+                            <span class="value euro" id="pensionAnnualCompContrib">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
                             <span class="row-label">Versamenti Dipendente Totali</span>
                             <span class="value euro" id="pensionTotalEmpContrib">€ 0,00</span>
                         </div>
@@ -1251,10 +1259,14 @@
             const capitalNet = capital - taxesOnGain;
 
             const annualTaxRecoveryAvg = pensionYears > 0 ? totalTaxRecovery / pensionYears : 0;
+            const annualEmpContribAvg = pensionYears > 0 ? totalEmpContrib / pensionYears : 0;
+            const annualCompContribAvg = pensionYears > 0 ? totalCompContrib / pensionYears : 0;
 
             document.getElementById('pensionNetRate').textContent = formatPercent(netRate);
             document.getElementById('pensionTaxRecovery').textContent = formatCurrency(annualTaxRecoveryAvg);
             document.getElementById('pensionTaxRecoveryTotal').textContent = formatCurrency(totalTaxRecovery);
+            document.getElementById('pensionAnnualEmpContrib').textContent = formatCurrency(annualEmpContribAvg);
+            document.getElementById('pensionAnnualCompContrib').textContent = formatCurrency(annualCompContribAvg);
             document.getElementById('pensionTotalEmpContrib').textContent = formatCurrency(totalEmpContrib);
             document.getElementById('pensionTotalCompContrib').textContent = formatCurrency(totalCompContrib);
             document.getElementById('pensionTotalTFR').textContent = formatCurrency(totalTFR);
