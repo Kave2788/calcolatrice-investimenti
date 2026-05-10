@@ -414,6 +414,7 @@
             white-space: nowrap;
         }
 
+        .scenario-tag.tfr-old { background: rgba(107, 114, 128, 0.12); color: #6B7280; }
         .scenario-tag.tfr-no { background: rgba(99, 102, 241, 0.12); color: #6366F1; }
         .scenario-tag.tfr-yes { background: rgba(59, 130, 246, 0.12); color: #3B82F6; }
         .scenario-tag.cd { background: rgba(16, 185, 129, 0.12); color: #10B981; }
@@ -627,6 +628,53 @@
                             <span class="hint">Crescita stipendio annua. Influenza la quota TFR ogni anno</span>
                         </label>
                         <input type="number" id="careerAdjGenerale" value="1.0" step="0.1" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEZIONE TFR VECCHIO IN AZIENDA -->
+            <div class="section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <span class="title">🏢 TFR Vecchio in Azienda</span>
+                    <span class="icon">▼</span>
+                </div>
+                <div class="section-content">
+                    <div class="input-group">
+                        <label>
+                            Saldo TFR Accumulato (€)
+                            <span class="hint">TFR maturato prima di aprire il fondo pensione</span>
+                        </label>
+                        <input type="number" id="tfrOldBalance" value="15000" step="100" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Anni di Rivalutazione Rimanenti
+                            <span class="hint">Quanti anni rimangono prima della riscossione</span>
+                        </label>
+                        <input type="number" id="tfrOldYears" value="15" step="1" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>
+                            Aliquota IRPEF (%)
+                            <span class="hint">17-43% a seconda del reddito. Usa 23% come media</span>
+                        </label>
+                        <input type="number" id="tfrOldTaxRate" value="23" step="0.5" min="0" max="100">
+                    </div>
+
+                    <div class="subsection results">
+                        <div class="subsection-title">📈 Risultati</div>
+                        <div class="calculation-row highlight">
+                            <span class="row-label">Capitale Finale Lordo</span>
+                            <span class="value euro" id="tfrOldCapitalGross">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row">
+                            <span class="row-label">Tasse su TFR</span>
+                            <span class="value euro" id="tfrOldTaxes">€ 0,00</span>
+                        </div>
+                        <div class="calculation-row total">
+                            <span class="row-label">Capitale Finale Netto</span>
+                            <span class="value euro" id="tfrOldCapitalNet">€ 0,00</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -963,6 +1011,14 @@
                     </thead>
                     <tbody>
                         <tr>
+                            <td><input type="checkbox" id="compareTFROld" checked class="scenario-toggle"></td>
+                            <td><span class="scenario-tag tfr-old">TFR Vecchio Azienda</span></td>
+                            <td class="euro" id="table-tfr-old-initial">€ 0,00</td>
+                            <td class="euro" id="table-tfr-old-contrib">€ 0,00</td>
+                            <td class="euro" id="table-tfr-old-gain">€ 0,00</td>
+                            <td class="euro" id="table-tfr-old-final"><strong>€ 0,00</strong></td>
+                        </tr>
+                        <tr>
                             <td><input type="checkbox" id="compareTFRNo" checked class="scenario-toggle"></td>
                             <td><span class="scenario-tag tfr-no">TFR Senza Fondo</span></td>
                             <td class="euro" id="table-tfr-initial">€ 0,00</td>
@@ -1050,6 +1106,38 @@
         // Toggle sezioni
         function toggleSection(header) {
             header.parentElement.classList.toggle('collapsed');
+        }
+
+        // ========================================
+        // CALCOLO TFR VECCHIO IN AZIENDA
+        // ========================================
+        function calculateTFROld() {
+            const balance = getNum('tfrOldBalance');
+            const years = getInt('tfrOldYears');
+            const taxRate = getNum('tfrOldTaxRate');
+
+            const rateDecimal = 1.5 / 100; // Rivalutazione TFR di legge 1.5%
+
+            // Rivalutazione anno per anno (zero nuovi versamenti)
+            let capital = balance;
+            for (let year = 1; year <= years; year++) {
+                capital = capital * (1 + rateDecimal);
+            }
+
+            // Tassazione sul totale del TFR
+            const taxes = Math.max(0, capital * (taxRate / 100));
+            const capitalNet = capital - taxes;
+
+            document.getElementById('tfrOldCapitalGross').textContent = formatCurrency(capital);
+            document.getElementById('tfrOldTaxes').textContent = formatCurrency(taxes);
+            document.getElementById('tfrOldCapitalNet').textContent = formatCurrency(capitalNet);
+
+            return {
+                initial: balance,
+                contrib: 0,
+                gain: capitalNet - balance,
+                final: capitalNet
+            };
         }
 
         // ========================================
@@ -1303,10 +1391,16 @@
         // AGGIORNA TUTTO
         // ========================================
         function updateAll() {
+            const tfrOld = calculateTFROld();
             const tfr = calculateTFRWithoutPension();
             const pension = calculateTFRWithPension();
             const conto = calculateContoDeposito();
             const pac = calculatePAC();
+
+            document.getElementById('table-tfr-old-initial').textContent = formatCurrency(tfrOld.initial);
+            document.getElementById('table-tfr-old-contrib').textContent = formatCurrency(tfrOld.contrib);
+            document.getElementById('table-tfr-old-gain').textContent = formatCurrency(tfrOld.gain);
+            document.getElementById('table-tfr-old-final').innerHTML = '<strong>' + formatCurrency(tfrOld.final) + '</strong>';
 
             document.getElementById('table-tfr-initial').textContent = formatCurrency(tfr.initial);
             document.getElementById('table-tfr-contrib').textContent = formatCurrency(tfr.contrib);
@@ -1329,20 +1423,22 @@
             document.getElementById('table-pac-final').innerHTML = '<strong>' + formatCurrency(pac.final) + '</strong>';
 
             // Calcolo totale con checkboxes
+            const checkTFROld = document.getElementById('compareTFROld').checked;
             const checkTFRNo = document.getElementById('compareTFRNo').checked;
             const checkPension = document.getElementById('comparePension').checked;
             const checkCD = document.getElementById('compareCD').checked;
             const checkPAC = document.getElementById('comparePAC').checked;
 
+            const tfrOldToShow = checkTFROld ? tfrOld.final : 0;
             const tfrToShow = checkTFRNo ? tfr.final : 0;
             const pensionToShow = checkPension ? pension.final : 0;
             const cdToShow = checkCD ? conto.final : 0;
             const pacToShow = checkPAC ? pac.final : 0;
 
-            const grandTotal = tfrToShow + pensionToShow + cdToShow + pacToShow;
+            const grandTotal = tfrOldToShow + tfrToShow + pensionToShow + cdToShow + pacToShow;
 
             document.getElementById('grandTotal').textContent = formatCurrency(grandTotal);
-            document.getElementById('grandTotal-tfr').textContent = formatCurrency(Math.max(tfrToShow, pensionToShow));
+            document.getElementById('grandTotal-tfr').textContent = formatCurrency(Math.max(tfrOldToShow, tfrToShow, pensionToShow));
             document.getElementById('grandTotal-cd').textContent = formatCurrency(cdToShow);
             document.getElementById('grandTotal-pac').textContent = formatCurrency(pacToShow);
 
@@ -1457,7 +1553,7 @@
             // Numero inputs
             allInputs().forEach(el => { obj[el.id] = el.value; });
             // Checkboxes scenario
-            ['compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
+            ['compareTFROld', 'compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) obj[id] = el.checked;
             });
@@ -1578,7 +1674,7 @@
         });
 
         // Scenario toggles
-        ['compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
+        ['compareTFROld', 'compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('change', () => {
