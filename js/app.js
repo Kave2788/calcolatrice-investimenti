@@ -34,7 +34,7 @@ function toggleEdit(key) {
 // ── INFLATION SYNC ──
 function syncInflation(sourceId) {
     const v = gn(sourceId);
-    ['pension-inflation','pac-inflation'].forEach(id => {
+    ['pac-inflation'].forEach(id => {
         if ($(id) && id !== sourceId) $(id).value = v;
     });
     updateAll();

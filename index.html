@@ -68,71 +68,97 @@
     </div>
 
     <div class="result-card purple">
-        <div class="result-label" id="pension-label">Capitale stimato a 67 anni</div>
+        <div class="result-label" id="pension-label">Capitale netto finale stimato</div>
         <div class="result-value" id="pension-result">€ 0</div>
         <div class="chart-wrap"><canvas id="pension-chart"></canvas></div>
     </div>
 
+    <div class="compare-card">
+        <div class="compare-row">
+            <span class="compare-dot dim"></span>
+            <span class="compare-label">TFR in azienda</span>
+            <span class="compare-value" id="pension-tfr-net">€ 0</span>
+        </div>
+        <div class="compare-row">
+            <span class="compare-dot purple"></span>
+            <span class="compare-label">Nel fondo pensione</span>
+            <span class="compare-value purple" id="pension-fp-net">€ 0</span>
+        </div>
+        <div class="compare-delta" id="pension-delta">—</div>
+    </div>
+
     <div class="params-section">
-        <div class="params-header">
-            <span class="params-title">I tuoi parametri</span>
-            <button class="edit-btn purple" onclick="toggleEdit('pension')">Modifica</button>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <span class="param-label">Orizzonte temporale</span>
+            <span class="param-value">
+                <input type="number" id="pension-years" value="37" min="1" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
+            </span>
         </div>
-        <div id="pension-display">
-            <div class="param-row">
-                <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-                <span class="param-label">Orizzonte temporale</span>
-                <span class="param-value" id="d-pension-years">37 anni</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-                <span class="param-label">Contributo mensile</span>
-                <span class="param-value" id="d-pension-monthly">€ 250</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-                <span class="param-label">Rendimento medio annuo</span>
-                <span class="param-value" id="d-pension-rate">4,5%</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
-                <span class="param-label">Inflazione media annua</span>
-                <span class="param-value" id="d-pension-inflation">2,0%</span>
-            </div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>
+            <span class="param-label">RAL annua</span>
+            <span class="param-value">
+                € <input type="number" id="s-ral" value="35000" min="0" step="500" class="inline-input wide" oninput="updateAll()">
+            </span>
         </div>
-        <div class="edit-grid" id="pension-edit">
-            <div class="edit-row">
-                <label>Orizzonte temporale (anni)</label>
-                <input type="number" id="pension-years" value="37" min="1" max="50" step="1" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Contributo mensile (€)</label>
-                <input type="number" id="pension-monthly" value="250" min="0" step="10" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Rendimento lordo (%)</label>
-                <input type="number" id="pension-rate" value="4.5" min="0" step="0.1" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Costi fondo (%)</label>
-                <input type="number" id="pension-costs" value="1.0" min="0" step="0.1" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Inflazione (%)</label>
-                <input type="number" id="pension-inflation" value="2.0" min="0" step="0.1" oninput="syncInflation('pension-inflation')">
-            </div>
-            <div class="edit-row">
-                <label>Tassazione capital gain (%)</label>
-                <input type="number" id="pension-tax" value="15" min="0" step="0.5" oninput="updateAll()">
-            </div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <span class="param-label">Aliquota IRPEF</span>
+            <span class="param-value">
+                <input type="number" id="s-irpef" value="23" min="0" step="0.5" class="inline-input" oninput="updateAll()">%
+            </span>
         </div>
     </div>
 
     <div class="params-section">
-        <div class="params-header">
-            <span class="params-title">Fondo COVIP</span>
+        <div class="section-header"><span>Contributi al fondo</span></div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <span class="param-label">Dipendente (% RAL)</span>
+            <span class="param-value">
+                <input type="number" id="s-emp-pct" value="1" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
+            </span>
         </div>
-        <div class="settings-row" style="border-top:1px solid var(--border)">
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <span class="param-label">Azienda (% RAL)</span>
+            <span class="param-value">
+                <input type="number" id="s-comp-pct" value="1" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
+            </span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
+            <span class="param-label">TFR versato al fondo</span>
+            <span class="param-value">
+                <input type="number" id="s-tfr-pct" value="100" min="0" max="100" step="10" class="inline-input" oninput="updateAll()">%
+            </span>
+        </div>
+        <div class="param-row computed">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span class="param-label">Totale mensile al fondo</span>
+            <span class="param-value purple" id="d-pension-monthly">€ 0</span>
+        </div>
+        <div class="param-row computed">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
+            <span class="param-label">Totale annuo al fondo</span>
+            <span class="param-value purple" id="d-pension-yearly-fund">€ 0</span>
+        </div>
+        <div class="param-row computed">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <span class="param-label">Totale annuo dipendente</span>
+            <span class="param-value purple" id="d-pension-yearly-dip">€ 0</span>
+        </div>
+        <div class="param-row computed">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <span class="param-label">Totale annuo azienda</span>
+            <span class="param-value purple" id="d-pension-yearly-az">€ 0</span>
+        </div>
+    </div>
+
+    <div class="params-section">
+        <div class="section-header"><span>Fondo COVIP</span></div>
+        <div class="settings-row">
             <label>Tipologia</label>
             <select id="s-fund-type" class="settings-select" oninput="updateAll()">
                 <option value="custom">Personalizzato</option>
@@ -166,28 +192,52 @@
     </div>
 
     <div class="params-section">
-        <div class="params-header">
-            <span class="params-title">RAL e contributi</span>
+        <div class="section-header"><span>Rendimento e fisco</span></div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <span class="param-label">Rendimento medio annuo</span>
+            <span class="param-value">
+                <input type="number" id="pension-rate" value="4.5" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
+            </span>
         </div>
-        <div class="settings-row" style="border-top:1px solid var(--border)">
-            <label>RAL annua (€)</label>
-            <input type="number" id="s-ral" value="35000" step="500" oninput="updateAll()">
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+            <span class="param-label">Costi fondo</span>
+            <span class="param-value">
+                <input type="number" id="pension-costs" value="1.0" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
+            </span>
         </div>
-        <div class="settings-row">
-            <label>Contributo dipendente (% RAL)</label>
-            <input type="number" id="s-emp-pct" value="3.4" step="0.1" oninput="updateAll()">
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <span class="param-label">Tassazione rendimenti</span>
+            <span class="param-value">
+                <input type="number" id="pension-capgain" value="20" min="0" step="0.5" class="inline-input" oninput="updateAll()">%
+            </span>
         </div>
-        <div class="settings-row">
-            <label>Contributo azienda (% RAL)</label>
-            <input type="number" id="s-comp-pct" value="5.1" step="0.1" oninput="updateAll()">
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <div class="param-label-stack">
+                <span class="param-label">Tassazione prestazione</span>
+                <span class="param-sub" id="d-pension-prest-note">automatica (15% → 9%)</span>
+            </div>
+            <span class="param-value purple" id="d-pension-prest">15%</span>
         </div>
-        <div class="settings-row">
-            <label>TFR versato al fondo (%)</label>
-            <input type="number" id="s-tfr-pct" value="100" min="0" max="100" step="10" oninput="updateAll()">
+    </div>
+
+    <div class="params-section">
+        <div class="section-header"><span>Risparmio fiscale 730</span></div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <span class="param-label">Risparmio annuo</span>
+            <span class="param-value purple" id="d-pension-saving-yearly">€ 0</span>
         </div>
-        <div class="settings-row">
-            <label>Aliquota IRPEF (%)</label>
-            <input type="number" id="s-irpef" value="23" step="0.5" oninput="updateAll()">
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
+            <div class="param-label-stack">
+                <span class="param-label">Risparmio totale</span>
+                <span class="param-sub" id="d-pension-saving-sub">—</span>
+            </div>
+            <span class="param-value purple" id="d-pension-saving-total">€ 0</span>
         </div>
     </div>
 
