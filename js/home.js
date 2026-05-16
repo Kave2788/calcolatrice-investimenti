@@ -12,7 +12,7 @@ function calcHome() {
 
     const yr0 = new Date().getFullYear();
     $('home-pension-val').textContent = fmtK(p.net);
-    $('home-pension-sub').textContent = p.years > 0 ? `a ${yr0 + p.years}` : '—';
+    $('home-pension-sub').textContent = p.years > 0 ? `nel ${yr0 + p.years}` : '—';
     $('home-pac-val').textContent     = fmtK(a.net);
     $('home-pac-sub').textContent     = a.years > 0 ? `tra ${a.years} anni` : '—';
     $('home-cd-val').textContent      = fmtK(c.net);
