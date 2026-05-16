@@ -1,11 +1,11 @@
 // ── TAB SWITCHING ──
-const NAV_COLOR = { home: 'gold', pension: 'purple', pac: 'green', cd: 'blue', settings: 'neutral' };
+const NAV_COLOR = { home: 'gold', pension: 'purple', pac: 'green', cd: 'blue' };
 
 function switchTab(tab) {
-    ['home','pension','pac','cd','settings'].forEach(t => {
+    ['home','pension','pac','cd'].forEach(t => {
         $('view-' + t).classList.remove('active');
         const nb = $('nav-' + t);
-        nb.classList.remove('active','gold','purple','green','blue','neutral');
+        nb.classList.remove('active','gold','purple','green','blue');
     });
     $('view-' + tab).classList.add('active');
     $('nav-' + tab).classList.add('active', NAV_COLOR[tab]);
@@ -18,7 +18,8 @@ function toggleEdit(key) {
     editOpen[key] = !editOpen[key];
     const grid    = $(key + '-edit');
     const display = $(key + '-display');
-    const btn     = grid.previousElementSibling.querySelector('.edit-btn');
+    const section = grid.closest('.params-section');
+    const btn     = section.querySelector('.edit-btn');
     if (editOpen[key]) {
         grid.classList.add('open');
         display.style.display = 'none';
@@ -33,7 +34,7 @@ function toggleEdit(key) {
 // ── INFLATION SYNC ──
 function syncInflation(sourceId) {
     const v = gn(sourceId);
-    ['pension-inflation','pac-inflation','s-inflation'].forEach(id => {
+    ['pension-inflation','pac-inflation'].forEach(id => {
         if ($(id) && id !== sourceId) $(id).value = v;
     });
     updateAll();
@@ -100,6 +101,8 @@ function restoreFundSelector() {
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
     restoreInputs();
+    loadBonds();
+    renderBonds();
     initCharts();
     initFundSelector();
     restoreFundSelector();

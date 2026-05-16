@@ -7,7 +7,7 @@ Questo file fornisce contesto e linee guida per Claude Code quando lavora su que
 **Calcolatrice Investimenti** è una PWA single-file in HTML/CSS/JS vanilla che confronta quattro strategie di investimento per il mercato italiano:
 
 1. **TFR Senza Fondo Pensione** (rivalutazione di legge)
-2. **TFR Con Fondo Pensione** (con contributi dipendente/azienda + recupero fiscale 7.30%)
+2. **TFR Con Fondo Pensione** (con contributi dipendente/azienda + recupero fiscale 730)
 3. **Conto Deposito** (con bollo 0.20% e tasse 26%)
 4. **PAC** (Piano di Accumulo con PIC opzionale)
 

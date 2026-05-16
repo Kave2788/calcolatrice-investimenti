@@ -3,12 +3,9 @@ function calcHome() {
     const a = RESULTS.pac;
     const c = RESULTS.cd;
 
-    const total     = p.net + a.net + c.net;
-    const totalPaid = p.paid + a.paid + c.paid;
-    const gainRatio = totalPaid > 0 ? (total - totalPaid) / totalPaid : 0;
+    const total = p.net + a.net + c.net;
 
     $('home-total').textContent = fmtK(total);
-    $('home-badge').textContent = total > 0 ? rating(gainRatio) : '—';
 
     const yr0 = new Date().getFullYear();
     $('home-pension-val').textContent = fmtK(p.net);

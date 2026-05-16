@@ -27,11 +27,9 @@ function calcPAC() {
     const gain      = Math.max(0, capital - totalPaid);
     const taxes     = gain * (taxRate / 100);
     const net       = capital - taxes;
-    const gainRatio = totalPaid > 0 ? (net - totalPaid) / totalPaid : 0;
 
     $('pac-label').textContent     = `Capitale stimato tra ${years} anni`;
     $('pac-result').textContent    = fmtK(net);
-    $('pac-badge').textContent     = rating(gainRatio);
     $('d-pac-initial').textContent  = fmtEur(initial);
     $('d-pac-monthly').textContent  = fmtEur(monthly);
     $('d-pac-years').textContent    = years + ' anni';

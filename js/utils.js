@@ -15,10 +15,3 @@ const RESULTS = {
     cd:      { net: 0, paid: 0, years: 0, series: [] }
 };
 
-// Rating basato sul rapporto guadagno/investito
-function rating(gainRatio) {
-    if (gainRatio >= 0.7)  return 'Ottimo';
-    if (gainRatio >= 0.4)  return 'Molto buono';
-    if (gainRatio >= 0.15) return 'Buono';
-    return 'Discreto';
-}
