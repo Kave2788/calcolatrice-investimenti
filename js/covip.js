@@ -369,8 +369,6 @@ const COVIP_ISC = {
       {c:'EQUITY',k:'AZN',i2:2.56,i5:2.02,i10:1.91,i35:1.87},
     ],
     'FONDO PENSIONE APERTO PENSPLAN PROFI': [
-
-    'FONDO PENSIONE APERTO PENSPLAN PROFI': [
       {c:'ETHICAL LIFE BALANCED GROWTH',k:'OBB',i2:2.14,i5:1.42,i10:1.21,i35:1.08},
       {c:'ETHICAL LIFE CONSERVATIVE',k:'OBB',i2:1.93,i5:1.21,i10:1.01,i35:0.87},
       {c:'ETHICAL LIFE GROWTH',k:'BIL',i2:2.24,i5:1.52,i10:1.32,i35:1.19},
@@ -789,7 +787,7 @@ function populateComparti(tipo, fundName) {
     COVIP_ISC[tipo][fundName].forEach((comp, i) => {
         const opt = document.createElement('option');
         opt.value = i;
-        opt.textContent = `${comp.c} (${catLabel[comp.k] || comp.k}) — ISC 35a: ${comp.i35}%`;
+        opt.textContent = comp.c + ' (' + (catLabel[comp.k] || comp.k) + ') — ISC 35a: ' + comp.i35 + '%';
         sel.appendChild(opt);
     });
 }
@@ -799,12 +797,8 @@ function applyISC(tipo, fundName, idx) {
     if (!tipo || !fundName || idx === '') { info.style.display = 'none'; return; }
     const comp = COVIP_ISC[tipo][fundName][idx];
     if (!comp) return;
-    // Aggiorna i campi nel tab Fondo Pensione
     $('pension-costs').value = comp.i35;
-    if (RENDIMENTI_DEFAULT[comp.k] !== undefined) {
-        $('pension-rate').value = RENDIMENTI_DEFAULT[comp.k];
-    }
-    // Mostra info ISC nelle Impostazioni
+    if (RENDIMENTI_DEFAULT[comp.k] !== undefined) $('pension-rate').value = RENDIMENTI_DEFAULT[comp.k];
     const catLabel = { GAR:'Garantito', OBB:'Obbligazionario', BIL:'Bilanciato', AZN:'Azionario' };
     $('s-isc-2').textContent  = comp.i2  + '%';
     $('s-isc-5').textContent  = comp.i5  + '%';
@@ -816,21 +810,19 @@ function applyISC(tipo, fundName, idx) {
 }
 
 function initFundSelector() {
-    $('s-fund-type').addEventListener('change', e => {
+    $('s-fund-type').addEventListener('change', function(e) {
         const tipo = e.target.value;
-        const isCustom = tipo === 'custom';
-        $('s-fund-name-row').style.display    = isCustom ? 'none' : '';
+        $('s-fund-name-row').style.display     = tipo === 'custom' ? 'none' : 'flex';
         $('s-fund-comparto-row').style.display = 'none';
         $('s-isc-info').style.display          = 'none';
         populateFundNames(tipo);
     });
-    $('s-fund-name').addEventListener('change', e => {
-        const tipo = $('s-fund-type').value;
-        $('s-fund-comparto-row').style.display = e.target.value ? '' : 'none';
-        $('s-isc-info').style.display = 'none';
-        populateComparti(tipo, e.target.value);
+    $('s-fund-name').addEventListener('change', function(e) {
+        $('s-fund-comparto-row').style.display = e.target.value ? 'flex' : 'none';
+        $('s-isc-info').style.display          = 'none';
+        populateComparti($('s-fund-type').value, e.target.value);
     });
-    $('s-fund-comparto').addEventListener('change', e => {
+    $('s-fund-comparto').addEventListener('change', function(e) {
         applyISC($('s-fund-type').value, $('s-fund-name').value, e.target.value);
     });
 }
