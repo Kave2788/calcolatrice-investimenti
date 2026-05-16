@@ -6,11 +6,15 @@ function calcPension() {
     const taxRate   = gn('pension-tax');
     const infl      = gn('pension-inflation');
 
-    const ral    = gn('pension-ral');
-    const pctDip = gn('pension-pct-dip');
-    const pctAz  = gn('pension-pct-az');
+    const ral    = gn('s-ral');
+    const pctDip = gn('s-emp-pct');
+    const pctAz  = gn('s-comp-pct');
+    const pctTFR = gn('s-tfr-pct');
     if (ral > 0) {
-        $('pension-monthly').value = Math.round(ral * (pctDip + pctAz) / 100 / 12);
+        const contribDip = (ral / 12) * (pctDip / 100);
+        const contribAz  = (ral / 12) * (pctAz  / 100);
+        const contribTFR = (ral / 13.5 / 12) * (pctTFR / 100);
+        $('pension-monthly').value = Math.round(contribDip + contribAz + contribTFR);
     }
     const monthly = gn('pension-monthly');
 
@@ -42,16 +46,6 @@ function calcPension() {
     $('d-pension-monthly').textContent = fmtEur(monthly);
     $('d-pension-rate').textContent   = fmtPct(rateGross);
     $('d-pension-inflation').textContent = fmtPct(infl);
-
-    const ralRow = $('pension-ral-row');
-    if (ralRow) {
-        if (ral > 0) {
-            ralRow.style.display = '';
-            $('d-pension-ral').textContent = fmtEur(ral) + ' · ' + pctDip.toFixed(1).replace('.',',') + '% + ' + pctAz.toFixed(1).replace('.',',') + '%';
-        } else {
-            ralRow.style.display = 'none';
-        }
-    }
 
     const monthlyIncome = net / (12 * 20);
     $('pension-tip').textContent = monthlyIncome > 0
