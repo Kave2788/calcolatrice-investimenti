@@ -8,6 +8,13 @@ const fmtK   = v => '€ ' + new Intl.NumberFormat('it-IT').format(Math.round(v 
 const fmtPct = v => (v || 0).toFixed(1).replace('.', ',') + '%';
 const fmtEur = v => '€ ' + new Intl.NumberFormat('it-IT', { maximumFractionDigits: 0 }).format(v || 0);
 
+// Stato condiviso tra i moduli di calcolo
+const RESULTS = {
+    pension: { net: 0, paid: 0, years: 0, series: [] },
+    pac:     { net: 0, paid: 0, years: 0, series: [] },
+    cd:      { net: 0, paid: 0, years: 0, series: [] }
+};
+
 // Rating basato sul rapporto guadagno/investito
 function rating(gainRatio) {
     if (gainRatio >= 0.7)  return 'Ottimo';

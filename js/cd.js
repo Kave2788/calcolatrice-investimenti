@@ -46,5 +46,6 @@ function calcCD() {
         ? `Con ${fmtEur(initial)} iniziali e ${fmtEur(monthlyAdd)}/mese guadagni ${fmtK(netGain)} netti in ${years} anni.`
         : 'La scelta più sicura per far crescere i tuoi risparmi in modo semplice.';
 
+    RESULTS.cd = { net, paid: totalIn, years, series: data };
     setChart('cd', labels, data);
 }

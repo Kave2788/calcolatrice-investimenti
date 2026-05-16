@@ -1,11 +1,11 @@
 // ── TAB SWITCHING ──
-const NAV_COLOR = { pension: 'purple', pac: 'green', cd: 'blue', settings: 'neutral' };
+const NAV_COLOR = { home: 'gold', pension: 'purple', pac: 'green', cd: 'blue', settings: 'neutral' };
 
 function switchTab(tab) {
-    ['pension','pac','cd','settings'].forEach(t => {
+    ['home','pension','pac','cd','settings'].forEach(t => {
         $('view-' + t).classList.remove('active');
         const nb = $('nav-' + t);
-        nb.classList.remove('active','purple','green','blue','neutral');
+        nb.classList.remove('active','gold','purple','green','blue','neutral');
     });
     $('view-' + tab).classList.add('active');
     $('nav-' + tab).classList.add('active', NAV_COLOR[tab]);
@@ -44,6 +44,7 @@ function updateAll() {
     calcPension();
     calcPAC();
     calcCD();
+    calcHome();
 }
 
 // ── PERSISTENZA ──

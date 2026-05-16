@@ -14,6 +14,8 @@
     --blue:    #60A5FA;
     --blue-bg: rgba(29,78,216,0.18);
     --nav-h:   68px;
+    --gold:    #F59E0B;
+    --gold-bg: rgba(245,158,11,0.18);
 }
 
 html, body {
@@ -60,6 +62,7 @@ html, body {
     padding: 20px 20px 0;
     overflow: hidden;
 }
+.result-card.gold   { background: linear-gradient(145deg,#3D2800,#1A1000); }
 .result-card.purple { background: linear-gradient(145deg,#2D1B69,#130D35); }
 .result-card.green  { background: linear-gradient(145deg,#064E3B,#071A13); }
 .result-card.blue   { background: linear-gradient(145deg,#1E3A5F,#091525); }
@@ -75,6 +78,7 @@ html, body {
     font-weight: 600;
     margin-bottom: 14px;
 }
+.badge-gold   { background: rgba(245,158,11,0.35);  color: var(--gold); }
 .badge-purple { background: rgba(124,58,237,0.35); color: var(--purple); }
 .badge-green  { background: rgba(5,150,105,0.35);  color: var(--green); }
 .badge-blue   { background: rgba(29,78,216,0.35);  color: var(--blue); }
@@ -128,6 +132,13 @@ html, body {
 
 .param-label { flex: 1; font-size: 0.87em; color: var(--muted); }
 .param-value { font-size: 0.9em; font-weight: 600; }
+.param-value.purple { color: var(--purple); }
+.param-value.green  { color: var(--green); }
+.param-value.blue   { color: var(--blue); }
+
+.param-label-stack { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.param-label-stack .param-label { flex: none; }
+.param-sub { font-size: 0.74em; color: var(--muted); opacity: 0.7; }
 
 /* edit grid */
 .edit-grid { display: none; flex-direction: column; }
@@ -188,6 +199,7 @@ html, body {
     transition: color 0.15s;
 }
 .nav-icon { font-size: 1.55em; line-height: 1; }
+.nav-item.active.gold    { color: var(--gold); }
 .nav-item.active.purple  { color: var(--purple); }
 .nav-item.active.green   { color: var(--green); }
 .nav-item.active.blue    { color: var(--blue); }

@@ -18,8 +18,52 @@
 </head>
 <body>
 
+<!-- ════════════════════ HOME ════════════════════ -->
+<div id="view-home" class="view active">
+    <div class="view-header">
+        <h1>Riepilogo</h1>
+    </div>
+
+    <div class="result-card gold">
+        <div class="result-label">Patrimonio totale stimato</div>
+        <div class="result-value" id="home-total">€ 0</div>
+        <div class="result-badge badge-gold" id="home-badge">—</div>
+        <div class="chart-wrap"><canvas id="home-chart"></canvas></div>
+    </div>
+
+    <div class="params-section">
+        <div class="params-header">
+            <span class="params-title">I tuoi strumenti</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon purple">💼</div>
+            <div class="param-label-stack">
+                <span class="param-label">Fondo Pensione</span>
+                <span class="param-sub" id="home-pension-sub">—</span>
+            </div>
+            <span class="param-value purple" id="home-pension-val">€ 0</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon green">📊</div>
+            <div class="param-label-stack">
+                <span class="param-label">PAC</span>
+                <span class="param-sub" id="home-pac-sub">—</span>
+            </div>
+            <span class="param-value green" id="home-pac-val">€ 0</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon blue">🏛️</div>
+            <div class="param-label-stack">
+                <span class="param-label">Conto Deposito</span>
+                <span class="param-sub" id="home-cd-sub">—</span>
+            </div>
+            <span class="param-value blue" id="home-cd-val">€ 0</span>
+        </div>
+    </div>
+</div>
+
 <!-- ════════════════════ FONDO PENSIONE ════════════════════ -->
-<div id="view-pension" class="view active">
+<div id="view-pension" class="view">
     <div class="view-header">
         <h1>Fondo pensione</h1>
         <button class="info-btn">i</button>
@@ -349,9 +393,13 @@
 
 <!-- ════════════════════ BOTTOM NAV ════════════════════ -->
 <nav class="bottom-nav">
-    <button class="nav-item active purple" id="nav-pension" onclick="switchTab('pension')">
+    <button class="nav-item active gold" id="nav-home" onclick="switchTab('home')">
+        <span class="nav-icon">🏠</span>
+        Home
+    </button>
+    <button class="nav-item" id="nav-pension" onclick="switchTab('pension')">
         <span class="nav-icon">💼</span>
-        Fondo pensione
+        Pensione
     </button>
     <button class="nav-item" id="nav-pac" onclick="switchTab('pac')">
         <span class="nav-icon">📊</span>
@@ -359,11 +407,11 @@
     </button>
     <button class="nav-item" id="nav-cd" onclick="switchTab('cd')">
         <span class="nav-icon">🏛️</span>
-        Conto deposito
+        Deposito
     </button>
     <button class="nav-item" id="nav-settings" onclick="switchTab('settings')">
         <span class="nav-icon">⚙️</span>
-        Impostazioni
+        Impostaz.
     </button>
 </nav>
 
@@ -373,6 +421,7 @@
 <script src="js/pension.js"></script>
 <script src="js/pac.js"></script>
 <script src="js/cd.js"></script>
+<script src="js/home.js"></script>
 <script src="js/covip.js"></script>
 <script src="js/app.js"></script>
 

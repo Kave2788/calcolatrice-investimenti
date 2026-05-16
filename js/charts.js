@@ -44,6 +44,7 @@ function setChart(key, labels, data) {
 }
 
 function initCharts() {
+    charts.home    = mkChart('home-chart',    '#F59E0B', 'rgba(245,158,11,0.13)');
     charts.pension = mkChart('pension-chart', '#A78BFA', 'rgba(167,139,250,0.13)');
     charts.pac     = mkChart('pac-chart',     '#34D399', 'rgba(52,211,153,0.13)');
     charts.cd      = mkChart('cd-chart',      '#60A5FA', 'rgba(96,165,250,0.13)');

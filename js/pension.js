@@ -52,5 +52,6 @@ function calcPension() {
         ? `Con questi parametri potresti avere un reddito aggiuntivo di circa ${fmtEur(monthlyIncome)} al mese per i primi 20 anni di pensione.`
         : 'Inserisci i tuoi parametri per scoprire il tuo futuro finanziario.';
 
+    RESULTS.pension = { net, paid: totalPaid, years, series: data };
     setChart('pension', labels, data);
 }

@@ -43,5 +43,6 @@ function calcPAC() {
         ? `Stai trasformando ${fmtEur(totalPaid)} in ${fmtK(net)}, guadagnando ${fmtK(netGain)} di interessi netti in ${years} anni.`
         : 'Con un piccolo investimento costante, il tempo è il tuo miglior alleato.';
 
+    RESULTS.pac = { net, paid: totalPaid, years, series: data };
     setChart('pac', labels, data);
 }
