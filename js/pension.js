@@ -1,11 +1,18 @@
 function calcPension() {
     const age       = gi('pension-age');
     const retire    = gi('pension-retire');
-    const monthly   = gn('pension-monthly');
     const rateGross = gn('pension-rate');
     const costs     = gn('pension-costs');
     const taxRate   = gn('pension-tax');
     const infl      = gn('pension-inflation');
+
+    const ral    = gn('pension-ral');
+    const pctDip = gn('pension-pct-dip');
+    const pctAz  = gn('pension-pct-az');
+    if (ral > 0) {
+        $('pension-monthly').value = Math.round(ral * (pctDip + pctAz) / 100 / 12);
+    }
+    const monthly = gn('pension-monthly');
 
     const years   = Math.max(0, retire - age);
     const rateNet = Math.max(0, rateGross - costs) / 100;
@@ -35,6 +42,16 @@ function calcPension() {
     $('d-pension-monthly').textContent = fmtEur(monthly);
     $('d-pension-rate').textContent   = fmtPct(rateGross);
     $('d-pension-inflation').textContent = fmtPct(infl);
+
+    const ralRow = $('pension-ral-row');
+    if (ralRow) {
+        if (ral > 0) {
+            ralRow.style.display = '';
+            $('d-pension-ral').textContent = fmtEur(ral) + ' · ' + pctDip.toFixed(1).replace('.',',') + '% + ' + pctAz.toFixed(1).replace('.',',') + '%';
+        } else {
+            ralRow.style.display = 'none';
+        }
+    }
 
     const monthlyIncome = net / (12 * 20);
     $('pension-tip').textContent = monthlyIncome > 0
