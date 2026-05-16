@@ -229,6 +229,19 @@ html, body {
 }
 .settings-row input:focus { outline: none; border-color: rgba(255,255,255,0.22); }
 
+.settings-select {
+    flex: 1;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.85em;
+    padding: 6px 10px;
+    min-width: 0;
+}
+.settings-select:focus { outline: none; border-color: rgba(255,255,255,0.22); }
+.settings-select option { background: #1E2540; }
+
 .settings-info {
     margin: 0 16px;
     background: var(--card);

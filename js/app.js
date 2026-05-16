@@ -49,5 +49,6 @@ function updateAll() {
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
     initCharts();
+    initFundSelector();
     updateAll();
 });
