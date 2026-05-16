@@ -2,2570 +2,328 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calcolatrice Investimenti - TFR | Conto Deposito | PAC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Investimenti</title>
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #0F3A66;
-            --secondary: #D4AF37;
-            --accent: #1E5A96;
-            --light: #F5F7FA;
-            --lighter: #FAFBFC;
-            --dark: #0A1F35;
-            --text: #1A1A1A;
-            --text-muted: #6B7280;
-            --border: #E5E7EB;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --danger: #EF4444;
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        html, body {
-            height: 100%;
-            background: linear-gradient(135deg, var(--light) 0%, var(--lighter) 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: var(--text);
-            line-height: 1.5;
-        }
-
-        body {
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .container {
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-            padding: 36px 24px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-            border-radius: 16px;
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
-        }
-
-        header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        header h1 {
-            font-size: 2.4em;
-            margin-bottom: 8px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            position: relative;
-        }
-
-        header p {
-            font-size: 1.05em;
-            opacity: 0.9;
-            font-weight: 300;
-            position: relative;
-        }
-
-        .sections {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        @media (min-width: 900px) {
-            .sections {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (min-width: 1200px) {
-            .sections {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        .section {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-            transition: box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .section:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .section.full-width {
-            grid-column: 1 / -1;
-        }
-
-        .section-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-            padding: 16px 22px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.1em;
-            font-weight: 600;
-            user-select: none;
-            transition: all 0.25s ease;
-        }
-
-        .section-header:hover {
-            filter: brightness(1.1);
-        }
-
-        .section-header .title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-header .icon {
-            font-size: 0.85em;
-            transition: transform 0.3s ease;
-            opacity: 0.8;
-        }
-
-        .section.collapsed .section-header .icon {
-            transform: rotate(-90deg);
-        }
-
-        .section-content {
-            padding: 22px;
-            max-height: 5000px;
-            overflow: hidden;
-            transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease;
-            opacity: 1;
-            flex: 1;
-        }
-
-        .section.collapsed .section-content {
-            max-height: 0;
-            opacity: 0;
-            padding-top: 0;
-            padding-bottom: 0;
-        }
-
-        .input-group {
-            margin-bottom: 14px;
-        }
-
-        .input-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 6px;
-            color: var(--text);
-            font-size: 0.9em;
-        }
-
-        label .hint {
-            display: block;
-            font-weight: 400;
-            color: var(--text-muted);
-            font-size: 0.85em;
-            margin-top: 2px;
-        }
-
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.95em;
-            transition: all 0.2s ease;
-            background: white;
-            color: var(--text);
-            font-family: inherit;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus,
-        select:focus {
-            outline: none;
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
-        }
-
-        input[type="number"]:hover,
-        select:hover {
-            border-color: var(--accent);
-        }
-
-        .subsection {
-            background: var(--light);
-            padding: 16px;
-            border-radius: 10px;
-            margin-bottom: 14px;
-            border-left: 3px solid var(--secondary);
-        }
-
-        .subsection:last-child {
-            margin-bottom: 0;
-        }
-
-        .subsection-title {
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 12px;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .subsection.results {
-            background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(15, 58, 102, 0.04) 100%);
-            border-left-color: var(--primary);
-        }
-
-        .calculation-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            font-size: 0.92em;
-            gap: 10px;
-        }
-
-        .calculation-row:last-child {
-            border-bottom: none;
-        }
-
-        .calculation-row .row-label {
-            font-weight: 500;
-            color: var(--text-muted);
-            flex: 1;
-        }
-
-        .calculation-row .value {
-            font-weight: 600;
-            color: var(--primary);
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .calculation-row.highlight {
-            background: rgba(212, 175, 55, 0.1);
-            padding: 10px 12px;
-            margin: 8px -4px;
-            border-radius: 6px;
-            border-bottom: none;
-        }
-
-        .calculation-row.highlight .row-label {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .calculation-row.highlight .value {
-            font-size: 1.05em;
-            color: var(--secondary);
-        }
-
-        .calculation-row.total {
-            background: var(--primary);
-            color: white;
-            padding: 12px 14px;
-            margin: 10px -4px 0;
-            border-radius: 8px;
-            border-bottom: none;
-        }
-
-        .calculation-row.total .row-label {
-            color: white;
-            font-weight: 700;
-        }
-
-        .calculation-row.total .value {
-            color: var(--secondary);
-            font-size: 1.1em;
-        }
-
-        .comparison-section {
-            background: white;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            padding: 28px;
-            margin-top: 24px;
-            box-shadow: var(--shadow-md);
-        }
-
-        .comparison-section h2 {
-            text-align: center;
-            margin-bottom: 8px;
-            color: var(--primary);
-            font-size: 1.6em;
-            font-weight: 700;
-        }
-
-        .comparison-section .subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 28px;
-            font-size: 0.95em;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 380px;
-            margin-bottom: 28px;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-        }
-
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-
-        .comparison-table th {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-            padding: 12px 14px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .comparison-table th:not(:first-child) {
-            text-align: right;
-        }
-
-        .comparison-table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.92em;
-        }
-
-        .comparison-table td:first-child {
-            text-align: center;
-            padding: 12px 8px;
-            width: 40px;
-        }
-
-        .comparison-table td:not(:first-child) {
-            text-align: right;
-            font-family: 'Courier New', monospace;
-            font-weight: 500;
-        }
-
-        .scenario-toggle {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .comparison-table tbody tr:hover {
-            background: var(--light);
-        }
-
-        .comparison-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .scenario-tag {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.85em;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .scenario-tag.tfr-old { background: rgba(107, 114, 128, 0.12); color: #6B7280; }
-        .scenario-tag.tfr-no { background: rgba(99, 102, 241, 0.12); color: #6366F1; }
-        .scenario-tag.tfr-yes { background: rgba(59, 130, 246, 0.12); color: #3B82F6; }
-        .scenario-tag.cd { background: rgba(16, 185, 129, 0.12); color: #10B981; }
-        .scenario-tag.pac { background: rgba(245, 158, 11, 0.12); color: #F59E0B; }
-
-        .final-summary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 12px;
-            margin-top: 24px;
-            text-align: center;
-        }
-
-        .final-summary h3 {
-            font-size: 1em;
-            margin-bottom: 12px;
-            opacity: 0.95;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 500;
-        }
-
-        .final-summary .total-value {
-            font-size: 2.4em;
-            font-weight: 700;
-            color: var(--secondary);
-            font-family: 'Courier New', monospace;
-        }
-
-        .final-summary .breakdown {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 14px;
-            margin-top: 18px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .final-summary .breakdown-item {
-            text-align: center;
-        }
-
-        .final-summary .breakdown-label {
-            font-size: 0.8em;
-            opacity: 0.8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-
-        .final-summary .breakdown-value {
-            font-size: 1.1em;
-            font-weight: 600;
-            font-family: 'Courier New', monospace;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 32px;
-            padding: 20px;
-            color: var(--text-muted);
-            font-size: 0.85em;
-        }
-
-        .euro {
-            font-family: 'Courier New', monospace;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-
-            header {
-                padding: 24px 16px;
-            }
-
-            header h1 {
-                font-size: 1.6em;
-            }
-
-            header p {
-                font-size: 0.9em;
-            }
-
-            .section-content {
-                padding: 16px;
-            }
-
-            .subsection {
-                padding: 12px;
-            }
-
-            .comparison-section {
-                padding: 18px;
-            }
-
-            .final-summary .total-value {
-                font-size: 1.8em;
-            }
-
-            .chart-container {
-                height: 300px;
-            }
-        }
-        /* Sync bar */
-        .sync-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 10px 16px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-sm);
-            flex-wrap: wrap;
-        }
-        .sync-bar .sync-status {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .sync-bar .sync-status::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-        }
-        .sync-bar.online .sync-status::before { background: var(--success); }
-        .sync-bar.error .sync-status::before { background: var(--danger); }
-        .sync-bar .sync-form, .sync-bar .sync-user {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .sync-bar input[type=email] {
-            padding: 6px 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 0.9rem;
-            min-width: 180px;
-        }
-        .sync-bar button {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 6px;
-            background: var(--primary);
-            color: white;
-            font-size: 0.85rem;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .sync-bar button:hover { background: var(--accent); }
-        .sync-bar button.secondary {
-            background: transparent;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-        }
-        .sync-bar .sync-email {
-            font-size: 0.85rem;
-            color: var(--text);
-            font-weight: 500;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>💰 Calcolatrice Investimenti</h1>
-            <p>Confronta TFR · Conto Deposito · PAC</p>
-        </header>
 
-        <div class="sync-bar" id="syncBar">
-            <div class="sync-status" id="syncStatus">Solo locale</div>
-            <div class="sync-form" id="syncForm">
-                <input type="email" id="syncEmail" placeholder="email per sync" autocomplete="email">
-                <button id="syncLogin">Accedi</button>
-            </div>
-            <div class="sync-user" id="syncUser" style="display:none">
-                <span class="sync-email" id="syncEmailDisplay"></span>
-                <button class="secondary" id="syncLogout">Esci</button>
-            </div>
-        </div>
-
-        <div class="sections">
-
-            <!-- SEZIONE DATI GENERALI -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <span class="title">📋 Dati Generali</span>
-                    <span class="icon">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="input-group">
-                        <label>
-                            RAL - Reddito Annuo Lordo (€)
-                            <span class="hint">Usato sia per TFR Senza Fondo che per quota TFR del Fondo Pensione</span>
-                        </label>
-                        <input type="number" id="ralGenerale" value="35000" step="500" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>
-                            Adeguamento Carriera Annuo (%)
-                            <span class="hint">Crescita stipendio annua. Influenza la quota TFR ogni anno</span>
-                        </label>
-                        <input type="number" id="careerAdjGenerale" value="1.0" step="0.1" min="0">
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEZIONE TFR VECCHIO IN AZIENDA -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <span class="title">🏢 TFR Vecchio in Azienda</span>
-                    <span class="icon">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="input-group">
-                        <label>
-                            Saldo TFR Accumulato (€)
-                            <span class="hint">TFR maturato prima di aprire il fondo pensione</span>
-                        </label>
-                        <input type="number" id="tfrOldBalance" value="15000" step="100" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>
-                            Anni di Rivalutazione Rimanenti
-                            <span class="hint">Quanti anni rimangono prima della riscossione</span>
-                        </label>
-                        <input type="number" id="tfrOldYears" value="15" step="1" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>
-                            Aliquota IRPEF (%)
-                            <span class="hint">17-43% a seconda del reddito. Usa 23% come media</span>
-                        </label>
-                        <input type="number" id="tfrOldTaxRate" value="23" step="0.5" min="0" max="100">
-                    </div>
-
-                    <div class="subsection results">
-                        <div class="subsection-title">📈 Risultati</div>
-                        <div class="calculation-row highlight">
-                            <span class="row-label">Capitale Finale Lordo</span>
-                            <span class="value euro" id="tfrOldCapitalGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Tasse su TFR</span>
-                            <span class="value euro" id="tfrOldTaxes">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row total">
-                            <span class="row-label">Capitale Finale Netto</span>
-                            <span class="value euro" id="tfrOldCapitalNet">€ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEZIONE TFR SENZA FONDO -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <span class="title">🏦 TFR Senza Fondo</span>
-                    <span class="icon">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="input-group">
-                        <label>
-                            Capitale TFR Già Maturato (€)
-                            <span class="hint">Lascia 0 se parti da zero. Utile se hai già accumulato TFR</span>
-                        </label>
-                        <input type="number" id="tfrInitial" value="0" step="100" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Anni di Lavoro</label>
-                        <input type="number" id="tfrYears" value="40" step="1" min="1">
-                    </div>
-                    <div class="input-group">
-                        <label>
-                            Aliquota IRPEF (%)
-                            <span class="hint">17-43% a seconda del reddito. Usa 23% come media</span>
-                        </label>
-                        <input type="number" id="tfrTaxRate" value="23" step="0.5" min="0" max="100">
-                    </div>
-
-                    <div class="subsection results">
-                        <div class="subsection-title">📈 Risultati</div>
-                        <div class="calculation-row">
-                            <span class="row-label">Quota TFR Annua (RAL ÷ 13.5)</span>
-                            <span class="value euro" id="tfrAnnualQuota">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Totale Versamenti TFR</span>
-                            <span class="value euro" id="tfrTotalContrib">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row highlight">
-                            <span class="row-label">Capitale Finale Lordo</span>
-                            <span class="value euro" id="tfrCapitalGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Tasse su TFR</span>
-                            <span class="value euro" id="tfrTaxes">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row total">
-                            <span class="row-label">Capitale Finale Netto</span>
-                            <span class="value euro" id="tfrFinalCapital">€ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEZIONE TFR CON FONDO PENSIONE -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <span class="title">🎯 TFR Con Fondo Pensione</span>
-                    <span class="icon">▼</span>
-                </div>
-                <div class="section-content">
-
-                    <div class="subsection">
-                        <div class="subsection-title">⚙️ Parametri Fondo</div>
-                        <div class="input-group">
-                            <label>Tipologia Fondo <span class="hint">Dati ISC ufficiali COVIP aggiornati</span></label>
-                            <select id="pensionFundType">
-                                <option value="custom">Personalizzato</option>
-                                <option value="FPN">Fondo Negoziale (categoria)</option>
-                                <option value="FPA">Fondo Aperto</option>
-                                <option value="PIP">Piano Individuale Pensionistico (PIP)</option>
-                            </select>
-                        </div>
-                        <div class="input-group" id="pensionFundNameGroup" style="display:none">
-                            <label>Nome Fondo</label>
-                            <select id="pensionFundName">
-                                <option value="">— seleziona —</option>
-                            </select>
-                        </div>
-                        <div class="input-group" id="pensionFundCompartoGroup" style="display:none">
-                            <label>Comparto</label>
-                            <select id="pensionFundComparto">
-                                <option value="">— seleziona —</option>
-                            </select>
-                        </div>
-                        <div id="pensionISCInfo" style="display:none; margin: 8px 0; padding: 10px 14px; background: rgba(212,175,55,0.08); border-left: 3px solid var(--secondary); border-radius: 4px; font-size: 0.85em;">
-                            <strong>ISC (Indicatore Sintetico di Costo)</strong>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top: 6px;">
-                                <div style="text-align:center"><div style="color:var(--text-muted); font-size:0.9em">2 anni</div><div id="iscVal2" style="font-weight:600">—</div></div>
-                                <div style="text-align:center"><div style="color:var(--text-muted); font-size:0.9em">5 anni</div><div id="iscVal5" style="font-weight:600">—</div></div>
-                                <div style="text-align:center"><div style="color:var(--text-muted); font-size:0.9em">10 anni</div><div id="iscVal10" style="font-weight:600">—</div></div>
-                                <div style="text-align:center"><div style="color:var(--text-muted); font-size:0.9em">35 anni</div><div id="iscVal35" style="font-weight:600; color:var(--secondary)">—</div></div>
-                            </div>
-                            <div style="color:var(--text-muted); font-size:0.8em; margin-top:6px">ISC a 35 anni → costi gestione · Rendimento lordo da media categoria (<span id="iscCategoria">—</span>)</div>
-                        </div>
-                        <div class="input-group">
-                            <label>
-                                Capitale Già Presente nel Fondo (€)
-                                <span class="hint">Lascia 0 se parti da zero</span>
-                            </label>
-                            <input type="number" id="pensionInitial" value="0" step="100" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>Costi di Gestione / ISC (%)</label>
-                            <input type="number" id="pensionCosts" value="1.0" step="0.1" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>Rendimento Annuo Lordo (%)</label>
-                            <input type="number" id="pensionRateGross" value="3.5" step="0.1" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>Anni di Accumulo</label>
-                            <input type="number" id="pensionYears" value="40" step="1" min="1">
-                        </div>
-                    </div>
-
-                    <div class="subsection">
-                        <div class="subsection-title">👤 Contributi Annuali</div>
-                        <div class="input-group">
-                            <span class="hint">📌 TFR e contributi calcolati in automatico in base alle % del RAL. Adeguamento carriera applica ogni anno. Beneficio fiscale Modello 730 su contributi dipendente+azienda fino a limite deducibilità.</span>
-                        </div>
-                        <div class="input-group">
-                            <label>
-                                Percentuale Contributo Dipendente (% RAL)
-                                <span class="hint">Es. 3.4% di RAL 35.000 → ~1.190 €/anno</span>
-                            </label>
-                            <input type="number" id="empContribPercent" value="3.4" step="0.1" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>
-                                Percentuale Contributo Azienda (% RAL)
-                                <span class="hint">Es. 5.1% di RAL 35.000 → ~1.785 €/anno</span>
-                            </label>
-                            <input type="number" id="compContribPercent" value="5.1" step="0.1" min="0">
-                        </div>
-                    </div>
-
-                    <div class="subsection">
-                        <div class="subsection-title">💸 Tassazione Finale</div>
-                        <div class="input-group">
-                            <label>
-                                Aliquota su Capital Gain (%)
-                                <span class="hint">Da 23% (15% dopo 35 anni)</span>
-                            </label>
-                            <input type="number" id="pensionTaxRate" value="15" step="0.5" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>
-                                Aliquota IRPEF per Deducibilità (%)
-                                <span class="hint">17-43% a seconda del reddito. Usa 23% come media</span>
-                            </label>
-                            <input type="number" id="pensionIRPEFRate" value="23" step="0.5" min="0" max="100">
-                        </div>
-                    </div>
-
-                    <div class="subsection results">
-                        <div class="subsection-title">📈 Risultati</div>
-                        <div class="calculation-row">
-                            <span class="row-label">Rendimento Annuo Netto</span>
-                            <span class="value" id="pensionNetRate">2.50%</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Beneficio Fiscale Modello 730 (medio annuo)</span>
-                            <span class="value euro" id="pensionTaxRecovery">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Beneficio Fiscale Totale</span>
-                            <span class="value euro" id="pensionTaxRecoveryTotal">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Versamento Annuo Dipendente (medio)</span>
-                            <span class="value euro" id="pensionAnnualEmpContrib">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Versamento Annuo Azienda (medio)</span>
-                            <span class="value euro" id="pensionAnnualCompContrib">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Versamenti Dipendente Totali</span>
-                            <span class="value euro" id="pensionTotalEmpContrib">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Versamenti Azienda Totali</span>
-                            <span class="value euro" id="pensionTotalCompContrib">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">TFR Conferito Totale</span>
-                            <span class="value euro" id="pensionTotalTFR">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Totale Contributi Versati (incl. TFR)</span>
-                            <span class="value euro" id="pensionTotalContrib">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row highlight">
-                            <span class="row-label">Capitale Stimato Lordo</span>
-                            <span class="value euro" id="pensionCapitalGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row total">
-                            <span class="row-label">Capitale Netto Finale</span>
-                            <span class="value euro" id="pensionCapitalNet">€ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEZIONE CONTO DEPOSITO -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <span class="title">💳 Conto Deposito</span>
-                    <span class="icon">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="input-group">
-                        <label>
-                            Capitale Vincolato (€)
-                            <span class="hint">Quanto depositi sul conto</span>
-                        </label>
-                        <input type="number" id="cdInitial" value="20000" step="100" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Tasso di Interesse Lordo Medio (%)</label>
-                        <input type="number" id="cdRate" value="4.0" step="0.1" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Vincolo (Anni)</label>
-                        <input type="number" id="cdYears" value="3" step="1" min="1">
-                    </div>
-
-                    <div class="subsection">
-                        <div class="subsection-title">💰 Calcolo Tasse</div>
-                        <div class="calculation-row">
-                            <span class="row-label">Imposta Bollo (0.20% × anni)</span>
-                            <span class="value euro" id="cdStampTax">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Tasse su Interessi (26%)</span>
-                            <span class="value euro" id="cdInterestTax">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row highlight">
-                            <span class="row-label">Totale Tasse</span>
-                            <span class="value euro" id="cdTotalTaxes">€ 0,00</span>
-                        </div>
-                    </div>
-
-                    <div class="subsection results">
-                        <div class="subsection-title">📈 Risultati</div>
-                        <div class="calculation-row">
-                            <span class="row-label">Interessi Lordi Totali</span>
-                            <span class="value euro" id="cdInterestGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Interessi Netti Totali</span>
-                            <span class="value euro" id="cdInterestNet">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Guadagno Annuo Lordo Medio</span>
-                            <span class="value euro" id="cdAnnualGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Guadagno Annuo Netto Medio</span>
-                            <span class="value euro" id="cdAnnualNet">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row highlight">
-                            <span class="row-label">Capitale Finale Lordo</span>
-                            <span class="value euro" id="cdCapitalGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row total">
-                            <span class="row-label">Capitale Finale Netto</span>
-                            <span class="value euro" id="cdFinalCapital">€ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEZIONE PAC -->
-            <div class="section">
-                <div class="section-header" onclick="toggleSection(this)">
-                    <span class="title">📈 PAC - Piano Accumulo</span>
-                    <span class="icon">▼</span>
-                </div>
-                <div class="section-content">
-                    <div class="input-group">
-                        <label>
-                            PIC - Versamento Iniziale (€)
-                            <span class="hint">Investimento "una tantum" all'avvio del PAC. Lascia 0 se non c'è</span>
-                        </label>
-                        <input type="number" id="pacInitial" value="0" step="100" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Versamento Mensile (€)</label>
-                        <input type="number" id="pacMonthly" value="300" step="10" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Rendimento Annuo Lordo (%)</label>
-                        <input type="number" id="pacRate" value="5.0" step="0.1" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>
-                            Tassazione su Capital Gain (%)
-                            <span class="hint">26% su ETF azionari, 12.5% su titoli di Stato</span>
-                        </label>
-                        <input type="number" id="pacTaxRate" value="26" step="0.5" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Anni di Accumulo</label>
-                        <input type="number" id="pacYears" value="20" step="1" min="1">
-                    </div>
-
-                    <div class="subsection results">
-                        <div class="subsection-title">📈 Risultati</div>
-                        <div class="calculation-row">
-                            <span class="row-label">Totale Versato</span>
-                            <span class="value euro" id="pacTotalPaid">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row highlight">
-                            <span class="row-label">Capitale Finale Lordo</span>
-                            <span class="value euro" id="pacCapitalGross">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Capital Gain</span>
-                            <span class="value euro" id="pacGain">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row">
-                            <span class="row-label">Tasse su Capital Gain</span>
-                            <span class="value euro" id="pacTaxes">€ 0,00</span>
-                        </div>
-                        <div class="calculation-row total">
-                            <span class="row-label">Capitale Finale Netto</span>
-                            <span class="value euro" id="pacCapitalNet">€ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SEZIONE CONFRONTO -->
-        <div class="comparison-section">
-            <h2>📊 Confronto Finale</h2>
-            <p class="subtitle">Visualizzazione comparativa dei quattro scenari</p>
-
-            <div class="chart-container">
-                <canvas id="comparisonChart"></canvas>
-            </div>
-
-            <div class="table-wrapper">
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Scenario</th>
-                            <th>Capitale Iniziale</th>
-                            <th>Contributi</th>
-                            <th>Capital Gain</th>
-                            <th>Capitale Finale</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="checkbox" id="compareTFROld" checked class="scenario-toggle"></td>
-                            <td><span class="scenario-tag tfr-old">TFR Vecchio Azienda</span></td>
-                            <td class="euro" id="table-tfr-old-initial">€ 0,00</td>
-                            <td class="euro" id="table-tfr-old-contrib">€ 0,00</td>
-                            <td class="euro" id="table-tfr-old-gain">€ 0,00</td>
-                            <td class="euro" id="table-tfr-old-final"><strong>€ 0,00</strong></td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" id="compareTFRNo" checked class="scenario-toggle"></td>
-                            <td><span class="scenario-tag tfr-no">TFR Senza Fondo</span></td>
-                            <td class="euro" id="table-tfr-initial">€ 0,00</td>
-                            <td class="euro" id="table-tfr-contrib">€ 0,00</td>
-                            <td class="euro" id="table-tfr-gain">€ 0,00</td>
-                            <td class="euro" id="table-tfr-final"><strong>€ 0,00</strong></td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" id="comparePension" checked class="scenario-toggle"></td>
-                            <td><span class="scenario-tag tfr-yes">TFR Con Fondo</span></td>
-                            <td class="euro" id="table-pension-initial">€ 0,00</td>
-                            <td class="euro" id="table-pension-contrib">€ 0,00</td>
-                            <td class="euro" id="table-pension-gain">€ 0,00</td>
-                            <td class="euro" id="table-pension-final"><strong>€ 0,00</strong></td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" id="compareCD" checked class="scenario-toggle"></td>
-                            <td><span class="scenario-tag cd">Conto Deposito</span></td>
-                            <td class="euro" id="table-cd-initial">€ 0,00</td>
-                            <td class="euro" id="table-cd-contrib">€ 0,00</td>
-                            <td class="euro" id="table-cd-gain">€ 0,00</td>
-                            <td class="euro" id="table-cd-final"><strong>€ 0,00</strong></td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" id="comparePAC" checked class="scenario-toggle"></td>
-                            <td><span class="scenario-tag pac">PAC</span></td>
-                            <td class="euro" id="table-pac-initial">€ 0,00</td>
-                            <td class="euro" id="table-pac-contrib">€ 0,00</td>
-                            <td class="euro" id="table-pac-gain">€ 0,00</td>
-                            <td class="euro" id="table-pac-final"><strong>€ 0,00</strong></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="final-summary">
-                <h3>💎 Capitale Totale Combinato (TFR + Conto + PAC)</h3>
-                <div class="total-value euro" id="grandTotal">€ 0,00</div>
-                <div class="breakdown">
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">TFR (miglior scenario)</div>
-                        <div class="breakdown-value euro" id="grandTotal-tfr">€ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">Conto Deposito</div>
-                        <div class="breakdown-value euro" id="grandTotal-cd">€ 0,00</div>
-                    </div>
-                    <div class="breakdown-item">
-                        <div class="breakdown-label">PAC</div>
-                        <div class="breakdown-value euro" id="grandTotal-pac">€ 0,00</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+<!-- ════════════════════ FONDO PENSIONE ════════════════════ -->
+<div id="view-pension" class="view active">
+    <div class="view-header">
+        <h1>Fondo pensione</h1>
+        <button class="info-btn">i</button>
     </div>
 
-    <script>
-        // Utility: Formatta numeri come valuta
-        const formatCurrency = (value) => {
-            return new Intl.NumberFormat('it-IT', {
-                style: 'currency',
-                currency: 'EUR',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value || 0);
-        };
+    <div class="result-card purple">
+        <div class="result-label" id="pension-label">Capitale stimato a 67 anni</div>
+        <div class="result-value" id="pension-result">€ 0</div>
+        <div class="result-badge badge-purple" id="pension-badge">—</div>
+        <div class="chart-wrap"><canvas id="pension-chart"></canvas></div>
+    </div>
+
+    <div class="params-section">
+        <div class="params-header">
+            <span class="params-title">I tuoi parametri</span>
+            <button class="edit-btn purple" onclick="toggleEdit('pension')">Modifica</button>
+        </div>
+        <div id="pension-display">
+            <div class="param-row">
+                <div class="param-icon purple">👤</div>
+                <span class="param-label">Età attuale</span>
+                <span class="param-value" id="d-pension-age">30 anni</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon purple">🏁</div>
+                <span class="param-label">Età pensionamento</span>
+                <span class="param-value" id="d-pension-retire">67 anni</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon purple">💶</div>
+                <span class="param-label">Contributo mensile</span>
+                <span class="param-value" id="d-pension-monthly">€ 250</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon purple">📈</div>
+                <span class="param-label">Rendimento medio annuo</span>
+                <span class="param-value" id="d-pension-rate">4,5%</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon purple">🌡️</div>
+                <span class="param-label">Inflazione media annua</span>
+                <span class="param-value" id="d-pension-inflation">2,0%</span>
+            </div>
+        </div>
+        <div class="edit-grid" id="pension-edit">
+            <div class="edit-row">
+                <label>Età attuale</label>
+                <input type="number" id="pension-age" value="30" min="18" max="65" step="1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Età pensionamento</label>
+                <input type="number" id="pension-retire" value="67" min="55" max="80" step="1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Contributo mensile (€)</label>
+                <input type="number" id="pension-monthly" value="250" min="0" step="10" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Rendimento lordo (%)</label>
+                <input type="number" id="pension-rate" value="4.5" min="0" step="0.1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Costi fondo (%)</label>
+                <input type="number" id="pension-costs" value="1.0" min="0" step="0.1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Inflazione (%)</label>
+                <input type="number" id="pension-inflation" value="2.0" min="0" step="0.1" oninput="syncInflation('pension-inflation')">
+            </div>
+            <div class="edit-row">
+                <label>Tassazione capital gain (%)</label>
+                <input type="number" id="pension-tax" value="15" min="0" step="0.5" oninput="updateAll()">
+            </div>
+        </div>
+    </div>
+
+    <div class="tip-card">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text" id="pension-tip">Inserisci i tuoi parametri per scoprire il tuo futuro finanziario.</span>
+    </div>
+</div>
+
+<!-- ════════════════════ PAC ════════════════════ -->
+<div id="view-pac" class="view">
+    <div class="view-header">
+        <h1>PAC</h1>
+        <button class="info-btn">i</button>
+    </div>
+
+    <div class="result-card green">
+        <div class="result-label" id="pac-label">Capitale stimato tra 20 anni</div>
+        <div class="result-value" id="pac-result">€ 0</div>
+        <div class="result-badge badge-green" id="pac-badge">—</div>
+        <div class="chart-wrap"><canvas id="pac-chart"></canvas></div>
+    </div>
+
+    <div class="params-section">
+        <div class="params-header">
+            <span class="params-title">I tuoi parametri</span>
+            <button class="edit-btn green" onclick="toggleEdit('pac')">Modifica</button>
+        </div>
+        <div id="pac-display">
+            <div class="param-row">
+                <div class="param-icon green">💰</div>
+                <span class="param-label">Investimento iniziale</span>
+                <span class="param-value" id="d-pac-initial">€ 5.000</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon green">📅</div>
+                <span class="param-label">Investimento mensile</span>
+                <span class="param-value" id="d-pac-monthly">€ 300</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon green">⏳</div>
+                <span class="param-label">Orizzonte temporale</span>
+                <span class="param-value" id="d-pac-years">20 anni</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon green">📈</div>
+                <span class="param-label">Rendimento medio annuo</span>
+                <span class="param-value" id="d-pac-rate">6,0%</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon green">🌡️</div>
+                <span class="param-label">Inflazione media annua</span>
+                <span class="param-value" id="d-pac-inflation">2,0%</span>
+            </div>
+        </div>
+        <div class="edit-grid" id="pac-edit">
+            <div class="edit-row">
+                <label>Investimento iniziale (€)</label>
+                <input type="number" id="pac-initial" value="5000" min="0" step="100" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Investimento mensile (€)</label>
+                <input type="number" id="pac-monthly" value="300" min="0" step="10" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Orizzonte temporale (anni)</label>
+                <input type="number" id="pac-years" value="20" min="1" max="50" step="1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Rendimento annuo lordo (%)</label>
+                <input type="number" id="pac-rate" value="6.0" min="0" step="0.1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Tassazione capital gain (%)</label>
+                <input type="number" id="pac-tax" value="26" min="0" step="0.5" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Inflazione (%)</label>
+                <input type="number" id="pac-inflation" value="2.0" min="0" step="0.1" oninput="syncInflation('pac-inflation')">
+            </div>
+        </div>
+    </div>
+
+    <div class="tip-card">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text" id="pac-tip">Con un piccolo investimento costante, il tempo è il tuo miglior alleato.</span>
+    </div>
+</div>
+
+<!-- ════════════════════ CONTO DEPOSITO ════════════════════ -->
+<div id="view-cd" class="view">
+    <div class="view-header">
+        <h1>Conto deposito</h1>
+        <button class="info-btn">i</button>
+    </div>
+
+    <div class="result-card blue">
+        <div class="result-label" id="cd-label">Capitale stimato tra 10 anni</div>
+        <div class="result-value" id="cd-result">€ 0</div>
+        <div class="result-badge badge-blue" id="cd-badge">—</div>
+        <div class="chart-wrap"><canvas id="cd-chart"></canvas></div>
+    </div>
+
+    <div class="params-section">
+        <div class="params-header">
+            <span class="params-title">I tuoi parametri</span>
+            <button class="edit-btn blue" onclick="toggleEdit('cd')">Modifica</button>
+        </div>
+        <div id="cd-display">
+            <div class="param-row">
+                <div class="param-icon blue">🏦</div>
+                <span class="param-label">Deposito iniziale</span>
+                <span class="param-value" id="d-cd-initial">€ 10.000</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon blue">📅</div>
+                <span class="param-label">Aggiunta mensile</span>
+                <span class="param-value" id="d-cd-monthly">€ 200</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon blue">⏳</div>
+                <span class="param-label">Orizzonte temporale</span>
+                <span class="param-value" id="d-cd-years">10 anni</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon blue">📈</div>
+                <span class="param-label">Tasso lordo annuo</span>
+                <span class="param-value" id="d-cd-rate">3,0%</span>
+            </div>
+            <div class="param-row">
+                <div class="param-icon blue">🏛️</div>
+                <span class="param-label">Tassazione interessi</span>
+                <span class="param-value" id="d-cd-tax">26%</span>
+            </div>
+        </div>
+        <div class="edit-grid" id="cd-edit">
+            <div class="edit-row">
+                <label>Deposito iniziale (€)</label>
+                <input type="number" id="cd-initial" value="10000" min="0" step="100" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Aggiunta mensile (€)</label>
+                <input type="number" id="cd-monthly-add" value="200" min="0" step="10" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Orizzonte temporale (anni)</label>
+                <input type="number" id="cd-years" value="10" min="1" max="50" step="1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Tasso lordo annuo (%)</label>
+                <input type="number" id="cd-rate" value="3.0" min="0" step="0.1" oninput="updateAll()">
+            </div>
+            <div class="edit-row">
+                <label>Tassazione interessi (%)</label>
+                <input type="number" id="cd-tax" value="26" min="0" step="0.5" oninput="updateAll()">
+            </div>
+        </div>
+    </div>
+
+    <div class="tip-card">
+        <span class="tip-icon">💡</span>
+        <span class="tip-text" id="cd-tip">La scelta più sicura per far crescere i tuoi risparmi in modo semplice.</span>
+    </div>
+</div>
+
+<!-- ════════════════════ IMPOSTAZIONI ════════════════════ -->
+<div id="view-settings" class="view">
+    <div class="settings-header">
+        <h1>Impostazioni</h1>
+    </div>
+
+    <div class="settings-group">
+        <div class="settings-group-label">Generale</div>
+        <div class="settings-card">
+            <div class="settings-row">
+                <label>Inflazione target (%)</label>
+                <input type="number" id="s-inflation" value="2.0" step="0.1" oninput="syncInflation('s-inflation')">
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-group">
+        <div class="settings-group-label">Fondo Pensione — avanzate</div>
+        <div class="settings-card">
+            <div class="settings-row">
+                <label>RAL annua (€)</label>
+                <input type="number" id="s-ral" value="35000" step="500" oninput="updateAll()">
+            </div>
+            <div class="settings-row">
+                <label>Contributo dipendente (% RAL)</label>
+                <input type="number" id="s-emp-pct" value="3.4" step="0.1" oninput="updateAll()">
+            </div>
+            <div class="settings-row">
+                <label>Contributo azienda (% RAL)</label>
+                <input type="number" id="s-comp-pct" value="5.1" step="0.1" oninput="updateAll()">
+            </div>
+            <div class="settings-row">
+                <label>Aliquota IRPEF (%)</label>
+                <input type="number" id="s-irpef" value="23" step="0.5" oninput="updateAll()">
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-group">
+        <div class="settings-group-label">Info</div>
+        <div class="settings-info">
+            <p>I calcoli sono a scopo orientativo e non costituiscono consulenza finanziaria.</p>
+            <p>Fondo pensione: rendimento netto = lordo − costi. Capital gain tassato solo alla liquidazione.</p>
+            <p>PAC: interesse composto mensile. CD: interesse annuale, bollo 0,20% annuo, tasse 26% sugli interessi.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════ BOTTOM NAV ════════════════════ -->
+<nav class="bottom-nav">
+    <button class="nav-item active purple" id="nav-pension" onclick="switchTab('pension')">
+        <span class="nav-icon">💼</span>
+        Fondo pensione
+    </button>
+    <button class="nav-item" id="nav-pac" onclick="switchTab('pac')">
+        <span class="nav-icon">📊</span>
+        PAC
+    </button>
+    <button class="nav-item" id="nav-cd" onclick="switchTab('cd')">
+        <span class="nav-icon">🏛️</span>
+        Conto deposito
+    </button>
+    <button class="nav-item" id="nav-settings" onclick="switchTab('settings')">
+        <span class="nav-icon">⚙️</span>
+        Impostazioni
+    </button>
+</nav>
+
+<!-- Script: ordine di caricamento importante -->
+<script src="js/utils.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/pension.js"></script>
+<script src="js/pac.js"></script>
+<script src="js/cd.js"></script>
+<script src="js/app.js"></script>
 
-        const formatPercent = (value) => {
-            return (value || 0).toFixed(2) + '%';
-        };
-
-        const getNum = (id) => {
-            const el = document.getElementById(id);
-            const val = parseFloat(el.value);
-            return isNaN(val) ? 0 : val;
-        };
-
-        const getInt = (id) => {
-            const el = document.getElementById(id);
-            const val = parseInt(el.value);
-            return isNaN(val) ? 0 : val;
-        };
-
-        // Toggle sezioni
-        function toggleSection(header) {
-            header.parentElement.classList.toggle('collapsed');
-        }
-
-        // ========================================
-        // CALCOLO TFR VECCHIO IN AZIENDA
-        // ========================================
-        function calculateTFROld() {
-            const balance = getNum('tfrOldBalance');
-            const years = getInt('tfrOldYears');
-            const taxRate = getNum('tfrOldTaxRate');
-
-            const rateDecimal = 1.5 / 100; // Rivalutazione TFR di legge 1.5%
-
-            // Rivalutazione anno per anno (zero nuovi versamenti)
-            let capital = balance;
-            for (let year = 1; year <= years; year++) {
-                capital = capital * (1 + rateDecimal);
-            }
-
-            // Tassazione sul totale del TFR
-            const taxes = Math.max(0, capital * (taxRate / 100));
-            const capitalNet = capital - taxes;
-
-            document.getElementById('tfrOldCapitalGross').textContent = formatCurrency(capital);
-            document.getElementById('tfrOldTaxes').textContent = formatCurrency(taxes);
-            document.getElementById('tfrOldCapitalNet').textContent = formatCurrency(capitalNet);
-
-            return {
-                initial: balance,
-                contrib: 0,
-                gain: capitalNet - balance,
-                final: capitalNet
-            };
-        }
-
-        // ========================================
-        // CALCOLO TFR SENZA FONDO PENSIONE
-        // ========================================
-        function calculateTFRWithoutPension() {
-            const initialCapital = getNum('tfrInitial');
-            const ral = getNum('ralGenerale');
-            const careerAdj = getNum('careerAdjGenerale');
-            const years = getInt('tfrYears');
-            const taxRate = getNum('tfrTaxRate');
-
-            const rateDecimal = 1.5 / 100; // Rivalutazione TFR di legge 1.5% + 75% inflazione
-            const careerAdjDecimal = careerAdj / 100;
-
-            // Quota TFR annua = RAL × (TFR% / 100)
-            const tfrPercent = 7.41 / 100; // TFR % per legge italiana
-            const annualQuotaBase = ral * tfrPercent;
-
-            // Simulazione anno per anno
-            let capital = initialCapital;
-            let totalContrib = 0;
-            let currentRAL = ral;
-
-            for (let year = 1; year <= years; year++) {
-                const yearQuota = currentRAL / 13.5;
-                capital = capital * (1 + rateDecimal);
-                capital += yearQuota;
-                totalContrib += yearQuota;
-                currentRAL = currentRAL * (1 + careerAdjDecimal);
-            }
-
-            // Tassazione sul totale del TFR (tassazione sostitutiva)
-            const capitalGain = capital - initialCapital - totalContrib;
-            const taxes = Math.max(0, capital * (taxRate / 100));
-            const capitalNet = capital - taxes;
-
-            document.getElementById('tfrAnnualQuota').textContent = formatCurrency(annualQuotaBase);
-            document.getElementById('tfrTotalContrib').textContent = formatCurrency(totalContrib);
-            document.getElementById('tfrCapitalGross').textContent = formatCurrency(capital);
-            document.getElementById('tfrTaxes').textContent = formatCurrency(taxes);
-            document.getElementById('tfrFinalCapital').textContent = formatCurrency(capitalNet);
-
-            return {
-                initial: initialCapital,
-                contrib: totalContrib,
-                gain: capitalNet - initialCapital - totalContrib,
-                final: capitalNet
-            };
-        }
-
-        // ========================================
-        // CALCOLO TFR CON FONDO PENSIONE
-        // ========================================
-        function calculateTFRWithPension() {
-            const initialCapital = getNum('pensionInitial');
-            const pensionCosts = getNum('pensionCosts');
-            const pensionRateGross = getNum('pensionRateGross');
-
-            // Contributi auto da sezione "Dati Generali": % del RAL
-            const empContribPercent = getNum('empContribPercent') / 100;
-            const compContribPercent = getNum('compContribPercent') / 100;
-
-            // TFR auto da sezione "Dati Generali": RAL × (TFR% / 100) con adeguamento carriera annuo
-            const baseRAL = getNum('ralGenerale');
-            const careerAdjDecimal = getNum('careerAdjGenerale') / 100;
-            const tfrPercent = 7.41 / 100; // TFR % per legge italiana
-
-            const pensionTaxRate = getNum('pensionTaxRate');
-            const irpefRate = getNum('pensionIRPEFRate') / 100;
-            const pensionYears = getInt('pensionYears');
-
-            const netRate = pensionRateGross - pensionCosts;
-            const netRateDecimal = netRate / 100;
-
-            let capital = initialCapital;
-            let totalContrib = 0;
-            let totalEmpContrib = 0;
-            let totalCompContrib = 0;
-            let totalTFR = 0;
-            let totalTaxRecovery = 0;
-
-            for (let year = 1; year <= pensionYears; year++) {
-                capital = capital * (1 + netRateDecimal);
-
-                // RAL cresce con adeguamento carriera
-                const ralYear = baseRAL * Math.pow(1 + careerAdjDecimal, year - 1);
-
-                // Contributi auto-calcolati come % del RAL anno
-                const empContrib = ralYear * empContribPercent;
-                const compContrib = ralYear * compContribPercent;
-                const tfrContrib = ralYear * tfrPercent;
-
-                const yearVoluntary = empContrib + compContrib;
-                const yearContrib = yearVoluntary + tfrContrib;
-                capital += yearContrib;
-                totalContrib += yearContrib;
-                totalEmpContrib += empContrib;
-                totalCompContrib += compContrib;
-                totalTFR += tfrContrib;
-
-                // Beneficio fiscale Modello 730: aliquota IRPEF su contributi dipendente e azienda
-                const taxBenefit = yearVoluntary * irpefRate;
-                totalTaxRecovery += taxBenefit;
-                capital += taxBenefit;
-            }
-
-            // Tassazione SOLO sul capital gain
-            const capitalGain = capital - initialCapital - totalContrib - totalTaxRecovery;
-            const taxesOnGain = Math.max(0, capitalGain * (pensionTaxRate / 100));
-            const capitalNet = capital - taxesOnGain;
-
-            const annualTaxRecoveryAvg = pensionYears > 0 ? totalTaxRecovery / pensionYears : 0;
-            const annualEmpContribAvg = pensionYears > 0 ? totalEmpContrib / pensionYears : 0;
-            const annualCompContribAvg = pensionYears > 0 ? totalCompContrib / pensionYears : 0;
-
-            document.getElementById('pensionNetRate').textContent = formatPercent(netRate);
-            document.getElementById('pensionTaxRecovery').textContent = formatCurrency(annualTaxRecoveryAvg);
-            document.getElementById('pensionTaxRecoveryTotal').textContent = formatCurrency(totalTaxRecovery);
-            document.getElementById('pensionAnnualEmpContrib').textContent = formatCurrency(annualEmpContribAvg);
-            document.getElementById('pensionAnnualCompContrib').textContent = formatCurrency(annualCompContribAvg);
-            document.getElementById('pensionTotalEmpContrib').textContent = formatCurrency(totalEmpContrib);
-            document.getElementById('pensionTotalCompContrib').textContent = formatCurrency(totalCompContrib);
-            document.getElementById('pensionTotalTFR').textContent = formatCurrency(totalTFR);
-            document.getElementById('pensionTotalContrib').textContent = formatCurrency(totalContrib);
-            document.getElementById('pensionCapitalGross').textContent = formatCurrency(capital);
-            document.getElementById('pensionCapitalNet').textContent = formatCurrency(capitalNet);
-
-            return {
-                initial: initialCapital,
-                contrib: totalContrib,
-                gain: capitalNet - initialCapital - totalContrib,
-                final: capitalNet
-            };
-        }
-
-        // ========================================
-        // CALCOLO CONTO DEPOSITO
-        // ========================================
-        function calculateContoDeposito() {
-            const initialCapital = getNum('cdInitial');
-            const rate = getNum('cdRate');
-            const years = getInt('cdYears');
-
-            const rateDecimal = rate / 100;
-
-            let capital = initialCapital;
-            let interestGross = 0;
-
-            for (let year = 1; year <= years; year++) {
-                const yearlyInterest = capital * rateDecimal;
-                interestGross += yearlyInterest;
-                capital += yearlyInterest;
-            }
-
-            // Tasse: 26% su interessi
-            const interestTax = interestGross * 0.26;
-            const interestNet = interestGross - interestTax;
-            
-            // Imposta di bollo: 0.20% su capitale per ogni anno
-            const stampTax = initialCapital * 0.002 * years;
-            
-            const totalTaxes = interestTax + stampTax;
-            // Capitale finale = iniziale + interessi netti - bollo
-            const capitalNet = initialCapital + interestNet - stampTax;
-
-            const annualGross = years > 0 ? interestGross / years : 0;
-            const annualNet = years > 0 ? (interestNet - stampTax) / years : 0;
-
-            const capitalGross = initialCapital + interestGross;
-
-            document.getElementById('cdStampTax').textContent = formatCurrency(stampTax);
-            document.getElementById('cdInterestTax').textContent = formatCurrency(interestTax);
-            document.getElementById('cdTotalTaxes').textContent = formatCurrency(totalTaxes);
-            document.getElementById('cdInterestGross').textContent = formatCurrency(interestGross);
-            document.getElementById('cdInterestNet').textContent = formatCurrency(interestNet);
-            document.getElementById('cdAnnualGross').textContent = formatCurrency(annualGross);
-            document.getElementById('cdAnnualNet').textContent = formatCurrency(annualNet);
-            document.getElementById('cdCapitalGross').textContent = formatCurrency(capitalGross);
-            document.getElementById('cdFinalCapital').textContent = formatCurrency(capitalNet);
-
-            return {
-                initial: initialCapital,
-                contrib: 0,
-                gain: capitalNet - initialCapital,
-                final: capitalNet
-            };
-        }
-
-        // ========================================
-        // CALCOLO PAC
-        // ========================================
-        function calculatePAC() {
-            const initialCapital = getNum('pacInitial');
-            const monthly = getNum('pacMonthly');
-            const rate = getNum('pacRate');
-            const taxRate = getNum('pacTaxRate');
-            const years = getInt('pacYears');
-
-            const rateMonthly = (rate / 100) / 12;
-            const months = years * 12;
-
-            let capital = initialCapital;
-            let totalPaid = 0;
-
-            for (let month = 1; month <= months; month++) {
-                capital = capital * (1 + rateMonthly);
-                capital += monthly;
-                totalPaid += monthly;
-            }
-
-            const capitalGain = capital - initialCapital - totalPaid;
-            const taxes = Math.max(0, capitalGain * (taxRate / 100));
-            const capitalNet = capital - taxes;
-
-            document.getElementById('pacTotalPaid').textContent = formatCurrency(totalPaid);
-            document.getElementById('pacCapitalGross').textContent = formatCurrency(capital);
-            document.getElementById('pacGain').textContent = formatCurrency(capitalGain);
-            document.getElementById('pacTaxes').textContent = formatCurrency(taxes);
-            document.getElementById('pacCapitalNet').textContent = formatCurrency(capitalNet);
-
-            return {
-                initial: initialCapital,
-                contrib: totalPaid,
-                gain: capitalGain - taxes,
-                final: capitalNet
-            };
-        }
-
-        // ========================================
-        // FONDI PENSIONE COVIP — dati ISC ufficiali
-        // ========================================
-        const COVIP_ISC = {
-          FPN: {
-            'FONDO PENSIONE FONCHIM': [
-              {c:'CRESCITA',k:'AZN',i2:0.81,i5:0.43,i10:0.27,i35:0.14},
-              {c:'GARANTITO',k:'GAR',i2:1.23,i5:0.86,i10:0.69,i35:0.57},
-              {c:'STABILITÀ',k:'OBB',i2:0.81,i5:0.43,i10:0.26,i35:0.13},
-            ],
-            'FONDO PENSIONE FONDENERGIA': [
-              {c:'BILANCIATO',k:'BIL',i2:0.42,i5:0.31,i10:0.26,i35:0.23},
-              {c:'DINAMICO',k:'AZN',i2:0.42,i5:0.3,i10:0.26,i35:0.22},
-              {c:'GARANTITO',k:'GAR',i2:0.76,i5:0.64,i10:0.6,i35:0.56},
-            ],
-            'FONDO PENSIONE QUADRI E CAPI FIAT': [
-              {c:'CRESCITA',k:'BIL',i2:0.91,i5:0.5,i10:0.33,i35:0.19},
-              {c:'REDDITO',k:'OBB',i2:0.89,i5:0.48,i10:0.31,i35:0.17},
-              {c:'STABILITA\'',k:'GAR',i2:1.4,i5:1.0,i10:0.83,i35:0.69},
-            ],
-            'FONDO PENSIONE COMETA': [
-              {c:'CRESCITA',k:'BIL',i2:0.62,i5:0.29,i10:0.18,i35:0.11},
-              {c:'MONETARIO PLUS',k:'OBB',i2:0.57,i5:0.24,i10:0.13,i35:0.06},
-              {c:'REDDITO',k:'BIL',i2:0.6,i5:0.27,i10:0.16,i35:0.09},
-              {c:'SICUREZZA',k:'GAR',i2:1.13,i5:0.8,i10:0.7,i35:0.63},
-            ],
-            'FONDOSANITA\'': [
-              {c:'ESPANSIONE',k:'AZN',i2:2.97,i5:1.28,i10:0.75,i35:0.38},
-              {c:'PROGRESSIONE',k:'BIL',i2:2.95,i5:1.26,i10:0.73,i35:0.36},
-              {c:'SCUDO',k:'OBB',i2:2.93,i5:1.24,i10:0.71,i35:0.34},
-            ],
-            'SOLIDARIETA\' VENETO - FONDO PENSIONE': [
-              {c:'DINAMICO - Lavoratori autonomi',k:'AZN',i2:1.42,i5:0.7,i10:0.44,i35:0.26},
-              {c:'DINAMICO - Lavoratori dipendenti',k:'AZN',i2:0.9,i5:0.46,i10:0.32,i35:0.23},
-              {c:'PRUDENTE  - Lavoratori autonomi',k:'OBB',i2:1.41,i5:0.69,i10:0.44,i35:0.25},
-              {c:'PRUDENTE  - Lavoratori dipendenti',k:'OBB',i2:0.9,i5:0.46,i10:0.32,i35:0.22},
-              {c:'REDDITO  - Lavoratori dipendenti',k:'BIL',i2:0.91,i5:0.47,i10:0.33,i35:0.24},
-              {c:'REDDITO - Lavoratori autonomi',k:'BIL',i2:1.42,i5:0.7,i10:0.45,i35:0.27},
-              {c:'GARANTITO  - Lavoratori autonomi',k:'GAR',i2:1.79,i5:1.07,i10:0.82,i35:0.63},
-              {c:'GARANTITO  - Lavoratori dipendenti',k:'GAR',i2:1.28,i5:0.84,i10:0.7,i35:0.6},
-            ],
-            'FONDO PENSIONE PREVIAMBIENTE': [
-              {c:'BILANCIATO',k:'OBB',i2:1.2,i5:0.64,i10:0.46,i35:0.34},
-              {c:'GARANTITO',k:'GAR',i2:1.5,i5:0.94,i10:0.76,i35:0.64},
-              {c:'AZIONARIO',k:'AZN',i2:1.42,i5:0.86,i10:0.68,i35:0.56},
-            ],
-            'FONDO PENSIONE ALIFOND': [
-              {c:'BILANCIATO',k:'BIL',i2:0.89,i5:0.55,i10:0.4,i35:0.28},
-              {c:'DINAMICO',k:'AZN',i2:0.94,i5:0.61,i10:0.45,i35:0.33},
-              {c:'GARANTITO',k:'GAR',i2:1.2,i5:0.87,i10:0.71,i35:0.59},
-            ],
-            'FONDO PENSIONE LABORFONDS': [
-              {c:'LINEA BILANCIATA',k:'BIL',i2:0.53,i5:0.36,i10:0.3,i35:0.24},
-              {c:'LINEA DINAMICA',k:'AZN',i2:0.49,i5:0.33,i10:0.26,i35:0.2},
-              {c:'LINEA GARANTITA',k:'GAR',i2:0.82,i5:0.65,i10:0.58,i35:0.52},
-              {c:'LINEA PRUDENTE - ETICA',k:'OBB',i2:0.46,i5:0.29,i10:0.22,i35:0.17},
-            ],
-            'FONDO PENSIONE FOPEN': [
-              {c:'BILANCIATO AZIONARIO',k:'AZN',i2:0.94,i5:0.66,i10:0.55,i35:0.47},
-              {c:'BILANCIATO OBBLIGAZIONARIO',k:'OBB',i2:0.89,i5:0.62,i10:0.51,i35:0.43},
-              {c:'OBBLIGAZIONARIO GARANTITO',k:'GAR',i2:1.05,i5:0.78,i10:0.67,i35:0.58},
-            ],
-            'FONDO PENSIONE PEGASO': [
-              {c:'BILANCIATO',k:'BIL',i2:1.07,i5:0.73,i10:0.6,i35:0.49},
-              {c:'GARANTITO',k:'GAR',i2:1.29,i5:0.95,i10:0.81,i35:0.71},
-              {c:'CRESCITA',k:'AZN',i2:0.9,i5:0.56,i10:0.42,i35:0.31},
-            ],
-            'FONDO PENSIONE ARCO': [
-              {c:'BILANCIATO DINAMICO',k:'BIL',i2:1.33,i5:0.66,i10:0.45,i35:0.31},
-              {c:'BILANCIATO PRUDENTE',k:'BIL',i2:1.37,i5:0.71,i10:0.49,i35:0.35},
-              {c:'GARANTITO',k:'GAR',i2:1.3,i5:0.63,i10:0.42,i35:0.28},
-            ],
-            'FONDO PENSIONE FONCER': [
-              {c:'BILANCIATO',k:'BIL',i2:1.33,i5:0.76,i10:0.54,i35:0.37},
-              {c:'DINAMICO',k:'AZN',i2:1.19,i5:0.62,i10:0.4,i35:0.23},
-              {c:'GARANTITO',k:'GAR',i2:1.72,i5:1.15,i10:0.93,i35:0.77},
-            ],
-            'FONDO PENSIONE FONDAPI': [
-              {c:'CRESCITA',k:'BIL',i2:0.87,i5:0.51,i10:0.36,i35:0.24},
-              {c:'GARANZIA',k:'GAR',i2:1.2,i5:0.84,i10:0.69,i35:0.57},
-              {c:'PRUDENTE',k:'OBB',i2:0.86,i5:0.5,i10:0.34,i35:0.22},
-            ],
-            'FONDO PENSIONE PREVIMODA': [
-              {c:'GARANTITO',k:'GAR',i2:1.37,i5:1.01,i10:0.86,i35:0.74},
-              {c:'RUBINO AZIONARIO',k:'AZN',i2:0.95,i5:0.58,i10:0.43,i35:0.31},
-              {c:'SMERALDO BILANCIATO',k:'BIL',i2:0.92,i5:0.56,i10:0.41,i35:0.29},
-            ],
-            'FONDO PENSIONE CONCRETO': [
-              {c:'BILANCIATO',k:'OBB',i2:1.03,i5:0.61,i10:0.42,i35:0.26},
-              {c:'GARANTITO',k:'GAR',i2:1.22,i5:0.8,i10:0.61,i35:0.46},
-            ],
-            'FONDO PENSIONE FON.TE.': [
-              {c:'CONSERVATIVO',k:'GAR',i2:1.65,i5:0.98,i10:0.78,i35:0.64},
-              {c:'CRESCITA',k:'BIL',i2:1.25,i5:0.58,i10:0.38,i35:0.24},
-              {c:'DINAMICO',k:'AZN',i2:1.25,i5:0.58,i10:0.38,i35:0.24},
-              {c:'SVILUPPO',k:'OBB',i2:1.32,i5:0.65,i10:0.45,i35:0.31},
-            ],
-            'FONDO PENSIONE BYBLOS': [
-              {c:'BILANCIATO',k:'BIL',i2:1.29,i5:0.7,i10:0.51,i35:0.38},
-              {c:'DINAMICO',k:'AZN',i2:1.14,i5:0.56,i10:0.36,i35:0.23},
-              {c:'GARANTITO',k:'GAR',i2:1.52,i5:0.94,i10:0.75,i35:0.61},
-            ],
-            'FONDO PENSIONE FONDO GOMMA PLASTICA': [
-              {c:'BILANCIATO',k:'BIL',i2:1.17,i5:0.61,i10:0.43,i35:0.3},
-              {c:'CONSERVATIVO CON GARANZIA',k:'GAR',i2:1.58,i5:1.02,i10:0.84,i35:0.71},
-              {c:'DINAMICO',k:'AZN',i2:1.06,i5:0.5,i10:0.31,i35:0.18},
-            ],
-            'FONDO PENSIONE MEDIAFOND': [
-              {c:'COMPARTO AZIONARIO',k:'AZN',i2:0.84,i5:0.5,i10:0.35,i35:0.22},
-              {c:'COMPARTO GARANTITO',k:'GAR',i2:1.08,i5:0.74,i10:0.59,i35:0.46},
-              {c:'COMPARTO OBBLIGAZIONARIO',k:'OBB',i2:0.81,i5:0.47,i10:0.32,i35:0.19},
-            ],
-            'PREVAER - FONDO PENSIONE': [
-              {c:'LINEA CRESCITA',k:'BIL',i2:1.16,i5:0.66,i10:0.47,i35:0.34},
-              {c:'LINEA DINAMICA',k:'BIL',i2:1.16,i5:0.66,i10:0.47,i35:0.34},
-              {c:'LINEA GARANTITA',k:'GAR',i2:1.4,i5:0.91,i10:0.72,i35:0.59},
-              {c:'LINEA PRUDENTE',k:'OBB',i2:1.1,i5:0.6,i10:0.42,i35:0.29},
-            ],
-            'FONDO PENSIONE EUROFER': [
-              {c:'BILANCIATO',k:'BIL',i2:0.81,i5:0.41,i10:0.3,i35:0.23},
-              {c:'DINAMICO',k:'AZN',i2:0.75,i5:0.35,i10:0.24,i35:0.17},
-              {c:'GARANTITO',k:'GAR',i2:1.12,i5:0.73,i10:0.61,i35:0.54},
-            ],
-            'FONDO PENSIONE PREVEDI': [
-              {c:'BILANCIATO',k:'BIL',i2:0.3,i5:0.24,i10:0.21,i35:0.19},
-              {c:'SICUREZZA',k:'GAR',i2:0.34,i5:0.28,i10:0.25,i35:0.23},
-            ],
-            'FONDO PENSIONE PRIAMO': [
-              {c:'BILANCIATO PRUDENZA',k:'OBB',i2:1.41,i5:0.57,i10:0.35,i35:0.22},
-              {c:'BILANCIATO SVILUPPO',k:'BIL',i2:1.4,i5:0.56,i10:0.34,i35:0.21},
-              {c:'GARANTITO PROTEZIONE',k:'GAR',i2:1.73,i5:0.89,i10:0.67,i35:0.55},
-            ],
-            'FONDO PENSIONE FONDEMAIN': [
-              {c:'DINAMICO  - Lavoratori autonomi',k:'AZN',i2:0.87,i5:0.43,i10:0.28,i35:0.19},
-              {c:'DINAMICO  - Lavoratori dipendenti',k:'AZN',i2:0.81,i5:0.41,i10:0.28,i35:0.19},
-              {c:'GARANTITO - Lavoratori autonomi',k:'GAR',i2:1.23,i5:0.79,i10:0.65,i35:0.55},
-              {c:'GARANTITO - Lavoratori dipendenti',k:'GAR',i2:1.17,i5:0.78,i10:0.65,i35:0.55},
-              {c:'PRUDENTE - Lavoratori autonomi',k:'OBB',i2:0.87,i5:0.43,i10:0.28,i35:0.19},
-              {c:'PRUDENTE - Lavoratori dipendenti',k:'OBB',i2:0.81,i5:0.41,i10:0.28,i35:0.19},
-            ],
-            'FONDO PENSIONE FONDOPOSTE': [
-              {c:'BILANCIATO',k:'BIL',i2:0.49,i5:0.4,i10:0.37,i35:0.33},
-              {c:'GARANTITO',k:'GAR',i2:0.53,i5:0.45,i10:0.41,i35:0.38},
-              {c:'MONETARIO',k:'OBB',i2:0.38,i5:0.3,i10:0.26,i35:0.23},
-              {c:'CRESCITA',k:'AZN',i2:0.38,i5:0.3,i10:0.26,i35:0.23},
-            ],
-            'FONDO PENSIONE FONDO SCUOLA ESPERO': [
-              {c:'CRESCITA',k:'BIL',i2:0.8,i5:0.44,i10:0.31,i35:0.2},
-              {c:'GARANZIA',k:'GAR',i2:0.96,i5:0.61,i10:0.47,i35:0.37},
-              {c:'DINAMICO',k:'AZN',i2:0.82,i5:0.46,i10:0.33,i35:0.22},
-            ],
-            'ASTRI - FONDO PENSIONE': [
-              {c:'BILANCIATO',k:'BIL',i2:0.84,i5:0.42,i10:0.28,i35:0.17},
-              {c:'GARANTITO',k:'GAR',i2:1.2,i5:0.79,i10:0.64,i35:0.54},
-            ],
-            'FONDO PENSIONE AGRIFONDO': [
-              {c:'BILANCIATO',k:'BIL',i2:0.85,i5:0.51,i10:0.36,i35:0.23},
-              {c:'GARANTITO',k:'GAR',i2:0.94,i5:0.61,i10:0.45,i35:0.33},
-            ],
-            'FONDO PERSEO SIRIO': [
-              {c:'GARANTITO',k:'GAR',i2:0.87,i5:0.68,i10:0.6,i35:0.53},
-              {c:'AZIONARIO',k:'AZN',i2:0.58,i5:0.39,i10:0.31,i35:0.24},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:0.53,i5:0.35,i10:0.27,i35:0.2},
-            ],
-            'FONDAEREO': [
-              {c:'GARANTITO  - Assistenti di volo',k:'GAR',i2:1.82,i5:1.21,i10:0.94,i35:0.73},
-              {c:'GARANTITO  - Piloti',k:'GAR',i2:2.68,i5:1.62,i10:1.15,i35:0.77},
-              {c:'AZIONARIO - Assistenti di volo',k:'AZN',i2:1.34,i5:0.72,i10:0.45,i35:0.24},
-              {c:'AZIONARIO - Piloti',k:'AZN',i2:2.2,i5:1.13,i10:0.65,i35:0.27},
-              {c:'OBBLIGAZIONARIO - Assistenti di volo',k:'OBB',i2:1.35,i5:0.73,i10:0.46,i35:0.25},
-              {c:'OBBLIGAZIONARIO - Piloti',k:'OBB',i2:2.22,i5:1.15,i10:0.68,i35:0.29},
-            ],
-            'PREVIDENZA COOPERATIVA': [
-              {c:'BILANCIATO',k:'OBB',i2:0.67,i5:0.4,i10:0.3,i35:0.23},
-              {c:'DINAMICO',k:'AZN',i2:0.64,i5:0.36,i10:0.27,i35:0.2},
-              {c:'SICURO',k:'GAR',i2:1.04,i5:0.76,i10:0.67,i35:0.6},
-            ],
-            'FONDO PENSIONE TELEMACO': [
-              {c:'DINAMICO',k:'AZN',i2:0.96,i5:0.63,i10:0.49,i35:0.38},
-              {c:'GARANTITO',k:'GAR',i2:0.97,i5:0.64,i10:0.5,i35:0.39},
-              {c:'PRUDENTE',k:'OBB',i2:0.91,i5:0.58,i10:0.44,i35:0.33},
-            ],
-          },
-          FPA: {
-            'ALLIANZ PREVIDENZA  FONDO PENSIONE APERTO A CONTRIBUZIONE DEFINITA': [
-              {c:'LINEA AZIONARIA',k:'AZN',i2:2.12,i5:1.58,i10:1.49,i35:1.45},
-              {c:'LINEA BILANCIATA',k:'BIL',i2:1.92,i5:1.38,i10:1.29,i35:1.25},
-              {c:'LINEA FLESSIBILE',k:'GAR',i2:1.77,i5:1.23,i10:1.14,i35:1.1},
-              {c:'LINEA MULTIASSET',k:'BIL',i2:3.05,i5:2.09,i10:1.8,i35:1.61},
-              {c:'LINEA OBBLIGAZIONARIA BREVE TERMINE',k:'OBB',i2:1.67,i5:1.13,i10:1.04,i35:1.0},
-              {c:'LINEA OBBLIGAZIONARIA LUNGO TERMINE',k:'OBB',i2:1.87,i5:1.33,i10:1.24,i35:1.2},
-            ],
-            'PREVIDENZA PER TE - FONDO PENSIONE APERTO': [
-              {c:'CRESCITA',k:'AZN',i2:3.01,i5:2.13,i10:1.88,i35:1.72},
-              {c:'GARANTITA',k:'GAR',i2:2.59,i5:1.71,i10:1.46,i35:1.3},
-              {c:'MISTA',k:'BIL',i2:2.8,i5:1.92,i10:1.67,i35:1.51},
-              {c:'MONETA',k:'OBB',i2:2.49,i5:1.61,i10:1.36,i35:1.19},
-              {c:'STABILITÀ',k:'BIL',i2:2.49,i5:1.61,i10:1.36,i35:1.19},
-            ],
-            'ALMEGLIO FONDO PENSIONE APERTO ALLEANZA A CONTRIBUZIONE DEFINITA': [
-              {c:'AZIONARIO',k:'AZN',i2:4.73,i5:3.2,i10:2.58,i35:2.1},
-              {c:'BILANCIATO',k:'GAR',i2:4.38,i5:2.84,i10:2.22,i35:1.74},
-              {c:'OBBLIGAZIONARIO',k:'GAR',i2:4.02,i5:2.48,i10:1.86,i35:1.38},
-            ],
-            'FONDO PENSIONE FIDEURAM - FONDO PENSIONE APERTO': [
-              {c:'CRESCITA',k:'AZN',i2:3.9,i5:2.54,i10:2.22,i35:2.05},
-              {c:'EQUILIBRIO',k:'BIL',i2:3.41,i5:2.04,i10:1.72,i35:1.55},
-              {c:'GARANZIA',k:'GAR',i2:2.91,i5:1.54,i10:1.22,i35:1.05},
-              {c:'SICUREZZA',k:'OBB',i2:3.21,i5:1.84,i10:1.52,i35:1.35},
-              {c:'VALORE',k:'AZN',i2:3.9,i5:2.54,i10:2.22,i35:2.05},
-              {c:'MILLENIALS',k:'AZN',i2:3.7,i5:2.34,i10:2.02,i35:1.85},
-            ],
-            'GENERALI GLOBAL - FONDO PENSIONE APERTO A CONTRIBUZIONE DEFINITA': [
-              {c:'AZIONARIO GLOBALE',k:'AZN',i2:3.06,i5:2.02,i10:1.76,i35:1.6},
-              {c:'MULTIASSET',k:'BIL',i2:2.85,i5:1.81,i10:1.55,i35:1.4},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:2.44,i5:1.4,i10:1.13,i35:0.98},
-              {c:'OBBLIGAZIONARIO BREVE TERMINE',k:'OBB',i2:2.39,i5:1.34,i10:1.08,i35:0.93},
-              {c:'REAL RETURN',k:'OBB',i2:2.49,i5:1.45,i10:1.18,i35:1.03},
-            ],
-            'PREVID-SYSTEM - FONDO PENSIONE APERTO': [
-              {c:'ACCUMULAZIONE BILANCIATA',k:'BIL',i2:1.91,i5:1.34,i10:1.18,i35:1.09},
-              {c:'CRESCITA DINAMICA',k:'OBB',i2:1.76,i5:1.19,i10:1.03,i35:0.94},
-              {c:'CRESCITA PRUDENTE',k:'OBB',i2:1.66,i5:1.09,i10:0.93,i35:0.84},
-              {c:'RIVALUTAZIONE AZIONARIA',k:'AZN',i2:2.21,i5:1.64,i10:1.48,i35:1.39},
-              {c:'TFR+',k:'GAR',i2:1.66,i5:1.09,i10:0.93,i35:0.84},
-            ],
-            'FONDO PENSIONE APERTO TESEO': [
-              {c:'BILANCIATA ETICA',k:'BIL',i2:2.01,i5:1.46,i10:1.36,i35:1.32},
-              {c:'GARANTITA ETICA',k:'GAR',i2:1.37,i5:0.81,i10:0.71,i35:0.67},
-              {c:'PRUDENZIALE ETICA',k:'OBB',i2:1.71,i5:1.16,i10:1.06,i35:1.02},
-              {c:'SVILUPPO ETICA',k:'AZN',i2:2.21,i5:1.66,i10:1.56,i35:1.52},
-            ],
-            'DESTINAZIONE FUTURO – FONDO PENSIONE APERTO BY CREDEMVITA': [
-              {c:'BILANCIATO',k:'BIL',i2:2.37,i5:1.6,i10:1.4,i35:1.28},
-              {c:'EVOLUTO',k:'AZN',i2:2.67,i5:1.91,i10:1.71,i35:1.6},
-              {c:'MODERATO',k:'BIL',i2:2.16,i5:1.39,i10:1.19,i35:1.08},
-              {c:'PRUDENTE GARANTITO',k:'GAR',i2:2.26,i5:1.5,i10:1.3,i35:1.18},
-            ],
-            'FONDO PENSIONE APERTO  VITTORIA FORMULA LAVORO': [
-              {c:'PREVIDENZA BILANCIATO INTERNAZIONALE',k:'BIL',i2:2.99,i5:1.59,i10:1.24,i35:1.05},
-              {c:'PREVIDENZA CAPITALIZZATA',k:'AZN',i2:3.66,i5:2.27,i10:1.92,i35:1.73},
-              {c:'PREVIDENZA EQUILIBRATA',k:'BIL',i2:3.31,i5:1.91,i10:1.56,i35:1.37},
-              {c:'PREVIDENZA GARANTITA',k:'GAR',i2:2.99,i5:1.59,i10:1.24,i35:1.05},
-            ],
-            'ARCA PREVIDENZA FONDO PENSIONE APERTO': [
-              {c:'ALTA CRESCITA SOSTENIBILE',k:'BIL',i2:2.82,i5:1.81,i10:1.61,i35:1.52},
-              {c:'CRESCITA SOSTENIBILE',k:'BIL',i2:2.64,i5:1.63,i10:1.42,i35:1.33},
-              {c:'OBIETTIVO TFR',k:'GAR',i2:2.64,i5:1.63,i10:1.42,i35:1.33},
-              {c:'RENDITA SOSTENIBILE',k:'BIL',i2:2.58,i5:1.56,i10:1.36,i35:1.27},
-            ],
-            'FONDO PENSIONE APERTO UNIPOL PREVIDENZA FPA': [
-              {c:'AZIONARIO',k:'AZN',i2:3.04,i5:2.14,i10:1.89,i35:1.72},
-              {c:'BILANCIATO DINAMICO',k:'BIL',i2:2.73,i5:1.83,i10:1.57,i35:1.41},
-              {c:'BILANCIATO EQUILIBRATO',k:'BIL',i2:2.52,i5:1.63,i10:1.37,i35:1.2},
-              {c:'BILANCIATO ETICO',k:'OBB',i2:2.32,i5:1.42,i10:1.16,i35:0.99},
-              {c:'BILANCIATO PRUDENTE',k:'OBB',i2:2.52,i5:1.63,i10:1.37,i35:1.2},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:2.32,i5:1.42,i10:1.16,i35:0.99},
-              {c:'GARANTITO FLEX',k:'GAR',i2:2.17,i5:1.26,i10:1.0,i35:0.83},
-            ],
-            'UNICREDIT - FONDO PENSIONE APERTO A CONTRIBUZIONE DEFINITA': [
-              {c:'DINAMICA - AZIONARIA INTERNAZIONALE',k:'AZN',i2:2.95,i5:1.87,i10:1.67,i35:1.6},
-              {c:'SERENA - BILANCIATA',k:'BIL',i2:2.75,i5:1.67,i10:1.47,i35:1.4},
-              {c:'SICURA - OBBLIGAZIONARIA CON GARANZIA DI RENDIMENTO MINIMO',k:'GAR',i2:2.45,i5:1.37,i10:1.17,i35:1.1},
-              {c:'TRANQUILLA - OBBLIGAZIONARIA MISTA CON GARANZIA DI RESTITUZIONE DEL CAPITALE',k:'GAR',i2:2.6,i5:1.52,i10:1.32,i35:1.25},
-            ],
-            'FONDO PENSIONE APERTO PREVIGEST FUND MEDIOLANUM': [
-              {c:'AZIONARIO',k:'AZN',i2:2.54,i5:2.27,i10:2.14,i35:2.04},
-              {c:'BILANCIATO',k:'BIL',i2:2.28,i5:2.01,i10:1.89,i35:1.78},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:2.04,i5:1.77,i10:1.65,i35:1.54},
-            ],
-            'FONDO PENSIONE APERTO ZURICH CONTRIBUTION': [
-              {c:'CONSERVATIVA',k:'OBB',i2:2.35,i5:1.23,i10:1.02,i35:0.95},
-              {c:'DINAMICA',k:'AZN',i2:2.45,i5:1.33,i10:1.12,i35:1.05},
-              {c:'GARANTITA',k:'GAR',i2:2.3,i5:1.18,i10:0.97,i35:0.9},
-            ],
-            'ZED OMNIFUND - FONDO PENSIONE APERTO': [
-              {c:'AZIONARIA',k:'AZN',i2:3.96,i5:2.83,i10:2.51,i35:2.31},
-              {c:'BILANCIATA 30',k:'BIL',i2:3.14,i5:1.99,i10:1.67,i35:1.46},
-              {c:'BILANCIATA 65',k:'AZN',i2:3.55,i5:2.41,i10:2.09,i35:1.89},
-              {c:'GARANTITA',k:'GAR',i2:3.55,i5:2.41,i10:2.09,i35:1.89},
-              {c:'OBBLIGAZIONARIA',k:'OBB',i2:2.66,i5:1.51,i10:1.19,i35:0.98},
-            ],
-            'PLURIFONDS IL FONDO PENSIONE DI ITAS VITA': [
-              {c:'ACTIVITAS',k:'AZN',i2:2.34,i5:1.84,i10:1.69,i35:1.59},
-              {c:'AEQUITAS',k:'BIL',i2:2.01,i5:1.44,i10:1.26,i35:1.13},
-              {c:'SECURITAS',k:'GAR',i2:1.82,i5:1.32,i10:1.17,i35:1.07},
-              {c:'SERENITAS',k:'OBB',i2:1.62,i5:1.12,i10:0.96,i35:0.86},
-              {c:'SOLIDITAS',k:'BIL',i2:1.98,i5:1.48,i10:1.33,i35:1.23},
-            ],
-            'EURORISPARMIO PREVIDENZA COMPLEMENTARE FONDO PENSIONE APERTO': [
-              {c:'AZIONARIO EUROPA',k:'AZN',i2:2.28,i5:1.74,i10:1.57,i35:1.45},
-              {c:'AZIONARIO INTERNAZIONALE',k:'AZN',i2:2.28,i5:1.74,i10:1.57,i35:1.45},
-              {c:'BILANCIATO',k:'BIL',i2:2.08,i5:1.54,i10:1.37,i35:1.25},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:1.68,i5:1.14,i10:0.97,i35:0.85},
-              {c:'OBBLIGAZIONARIO GARANTITO',k:'GAR',i2:1.48,i5:0.94,i10:0.77,i35:0.65},
-            ],
-            'FONDO PENSIONE APERTO AUREO': [
-              {c:'AZIONARIO ESG',k:'AZN',i2:2.17,i5:1.77,i10:1.65,i35:1.57},
-              {c:'BILANCIATO ESG',k:'BIL',i2:1.87,i5:1.47,i10:1.35,i35:1.27},
-              {c:'GARANTITO  ESG',k:'GAR',i2:1.17,i5:0.77,i10:0.65,i35:0.57},
-              {c:'OBBLIGAZIONARIO ESG',k:'OBB',i2:1.57,i5:1.17,i10:1.05,i35:0.97},
-              {c:'PRUDENTE  ESG',k:'OBB',i2:1.17,i5:0.77,i10:0.65,i35:0.57},
-            ],
-            'FONDO PENSIONE APERTO CREDIT AGRICOLE VITA': [
-              {c:'LINEA DINAMICA',k:'AZN',i2:2.66,i5:1.85,i10:1.63,i35:1.5},
-              {c:'LINEA GARANTITA',k:'GAR',i2:2.4,i5:1.59,i10:1.37,i35:1.24},
-              {c:'LINEA MODERATA',k:'BIL',i2:2.45,i5:1.64,i10:1.42,i35:1.29},
-            ],
-            'ARTI E MESTIERI FONDO PENSIONE APERTO': [
-              {c:'CONSERVAZIONE 3+',k:'OBB',i2:1.99,i5:1.21,i10:1.03,i35:0.93},
-              {c:'CRESCITA 25+',k:'AZN',i2:2.68,i5:1.91,i10:1.73,i35:1.63},
-              {c:'EQUILIBRIO 5+',k:'BIL',i2:2.19,i5:1.41,i10:1.23,i35:1.13},
-              {c:'GARANZIA 1+',k:'GAR',i2:1.69,i5:0.91,i10:0.73,i35:0.63},
-              {c:'INCREMENTO E GARANZIA 5+',k:'GAR',i2:1.79,i5:1.01,i10:0.83,i35:0.73},
-              {c:'RIVALUTAZIONE 10+',k:'BIL',i2:2.49,i5:1.71,i10:1.53,i35:1.43},
-              {c:'COMPARTO SVILUPPO 15+',k:'BIL',i2:2.58,i5:1.81,i10:1.63,i35:1.53},
-            ],
-            'SECONDAPENSIONE FONDO PENSIONE APERTO': [
-              {c:'BILANCIATA ESG',k:'BIL',i2:1.09,i5:0.88,i10:0.78,i35:0.71},
-              {c:'ESPANSIONE ESG',k:'AZN',i2:1.24,i5:1.03,i10:0.94,i35:0.86},
-              {c:'GARANTITA ESG',k:'GAR',i2:1.14,i5:0.93,i10:0.84,i35:0.76},
-              {c:'PRUDENTE ESG',k:'OBB',i2:1.03,i5:0.83,i10:0.73,i35:0.65},
-              {c:'SVILUPPO ESG',k:'BIL',i2:1.14,i5:0.93,i10:0.84,i35:0.76},
-            ],
-            'FONDO PENSIONE APERTO GIUSTINIANO': [
-              {c:'AZIONARIA',k:'AZN',i2:2.33,i5:1.72,i10:1.54,i35:1.42},
-              {c:'BILANCIATA',k:'BIL',i2:2.03,i5:1.42,i10:1.24,i35:1.12},
-              {c:'MONETARIA',k:'OBB',i2:1.55,i5:0.94,i10:0.76,i35:0.64},
-              {c:'OBBLIGAZIONARIA',k:'OBB',i2:1.64,i5:1.03,i10:0.85,i35:0.73},
-              {c:'TFR+',k:'GAR',i2:1.64,i5:1.03,i10:0.85,i35:0.73},
-            ],
-            'FONDO PENSIONE APERTO IL MIO DOMANI': [
-              {c:'LINEA BREVE TERMINE',k:'OBB',i2:2.94,i5:1.71,i10:1.3,i35:1.01},
-              {c:'LINEA BREVE TERMINE ESG',k:'OBB',i2:2.94,i5:1.71,i10:1.3,i35:1.01},
-              {c:'LINEA LUNGO TERMINE',k:'BIL',i2:3.44,i5:2.21,i10:1.8,i35:1.51},
-              {c:'LINEA LUNGO TERMINE ESG',k:'AZN',i2:3.44,i5:2.21,i10:1.8,i35:1.51},
-              {c:'LINEA MEDIO TERMINE',k:'BIL',i2:3.24,i5:2.01,i10:1.6,i35:1.31},
-              {c:'LINEA MEDIO TERMINE ESG',k:'BIL',i2:3.24,i5:2.01,i10:1.6,i35:1.31},
-              {c:'LINEA TFR',k:'GAR',i2:3.04,i5:1.81,i10:1.4,i35:1.11},
-            ],
-            'AZIMUT PREVIDENZA - FONDO PENSIONE APERTO': [
-              {c:'CRESCITA',k:'AZN',i2:3.49,i5:2.43,i10:2.13,i35:1.93},
-              {c:'EQUILIBRATO',k:'BIL',i2:3.18,i5:2.12,i10:1.82,i35:1.62},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:2.66,i5:1.6,i10:1.3,i35:1.1},
-            ],
-            'AZIONE DI PREVIDENZA - FONDO PENSIONE APERTO': [
-              {c:'DINAMICA',k:'AZN',i2:2.81,i5:2.16,i10:1.97,i35:1.84},
-              {c:'EQUILIBRATA',k:'BIL',i2:2.41,i5:1.76,i10:1.57,i35:1.44},
-              {c:'GARANTITA',k:'GAR',i2:1.71,i5:1.06,i10:0.86,i35:0.74},
-              {c:'PRUDENTE',k:'OBB',i2:2.01,i5:1.36,i10:1.17,i35:1.04},
-            ],
-            'FONDO PENSIONE APERTO CNP': [
-              {c:'AZIONARIO',k:'AZN',i2:1.88,i5:1.54,i10:1.38,i35:1.25},
-              {c:'BILANCIATO',k:'BIL',i2:1.68,i5:1.34,i10:1.18,i35:1.05},
-              {c:'GARANZIA DI RENDIMENTO MIN.',k:'GAR',i2:1.98,i5:1.64,i10:1.48,i35:1.35},
-              {c:'GARANZIA RESTITUZIONE CAPITALE',k:'GAR',i2:1.78,i5:1.44,i10:1.28,i35:1.15},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:1.59,i5:1.24,i10:1.08,i35:0.95},
-            ],
-            'INSIEME - FONDO PENSIONE APERTO A CONTRIBUZIONE DEFINITA': [
-              {c:'LINEA AZIONARIA',k:'AZN',i2:2.2,i5:1.09,i10:0.88,i35:0.81},
-              {c:'LINEA BILANCIATA',k:'AZN',i2:2.15,i5:1.04,i10:0.83,i35:0.76},
-              {c:'LINEA FLESSIBILE',k:'GAR',i2:2.0,i5:0.89,i10:0.68,i35:0.61},
-              {c:'LINEA MULTIASSET',k:'BIL',i2:3.03,i5:1.5,i10:1.1,i35:0.87},
-              {c:'LINEA OBBLIGAZIONARIA',k:'OBB',i2:2.1,i5:0.99,i10:0.78,i35:0.71},
-              {c:'LINEA OBBLIGAZIONARIA BREVE TERMINE',k:'OBB',i2:1.95,i5:0.84,i10:0.63,i35:0.56},
-              {c:'LINEA OBBLIGAZIONARIA LUNGO TERMINE',k:'OBB',i2:2.1,i5:0.99,i10:0.78,i35:0.71},
-            ],
-            'FONDO PENSIONE APERTO BIM VITA': [
-              {c:'BILANCIATA  GLOBALE',k:'BIL',i2:2.25,i5:1.71,i10:1.6,i35:1.56},
-              {c:'BOND',k:'OBB',i2:1.73,i5:1.18,i10:1.08,i35:1.04},
-              {c:'EQUILIBRIO',k:'GAR',i2:2.15,i5:1.6,i10:1.5,i35:1.46},
-              {c:'EQUITY',k:'AZN',i2:2.56,i5:2.02,i10:1.91,i35:1.87},
-            ],
-            'FONDO PENSIONE APERTO PENSPLAN PROFI': [
-              {c:'ETHICAL LIFE BALANCED GROWTH',k:'OBB',i2:2.14,i5:1.42,i10:1.21,i35:1.08},
-              {c:'ETHICAL LIFE CONSERVATIVE',k:'OBB',i2:1.93,i5:1.21,i10:1.01,i35:0.87},
-              {c:'ETHICAL LIFE GROWTH',k:'BIL',i2:2.24,i5:1.52,i10:1.32,i35:1.19},
-              {c:'ETHICAL LIFE HIGH GROWTH',k:'AZN',i2:2.5,i5:1.78,i10:1.58,i35:1.45},
-              {c:'ETHICAL LIFE SHORT TERM',k:'OBB',i2:1.83,i5:1.11,i10:0.9,i35:0.77},
-            ],
-            'RAIFFEISEN FONDO PENSIONE APERTO': [
-              {c:'ACTIVITY',k:'BIL',i2:2.13,i5:1.46,i10:1.3,i35:1.22},
-              {c:'DYNAMIC',k:'BIL',i2:2.33,i5:1.66,i10:1.51,i35:1.42},
-              {c:'GUARANTY',k:'GAR',i2:2.07,i5:1.4,i10:1.25,i35:1.16},
-              {c:'SAFE',k:'OBB',i2:1.92,i5:1.25,i10:1.09,i35:1.01},
-            ],
-            'FONDO PENSIONE APERTO UBI PREVIDENZA': [
-              {c:'AGGRESSIVO',k:'BIL',i2:2.23,i5:1.71,i10:1.58,i35:1.51},
-              {c:'CAPITALE SICURO',k:'GAR',i2:1.46,i5:0.93,i10:0.81,i35:0.73},
-              {c:'DINAMICO',k:'BIL',i2:1.99,i5:1.46,i10:1.33,i35:1.26},
-              {c:'GARANTITO',k:'GAR',i2:1.77,i5:1.24,i10:1.12,i35:1.04},
-              {c:'MODERATO',k:'BIL',i2:1.68,i5:1.15,i10:1.02,i35:0.95},
-              {c:'PRUDENTE',k:'OBB',i2:1.49,i5:0.97,i10:0.84,i35:0.77},
-            ],
-            'FONDO PENSIONE APERTO SOLUZIONE PREVIDENTE': [
-              {c:'LINEA 1 GARANTITA',k:'GAR',i2:2.06,i5:1.36,i10:1.18,i35:1.07},
-              {c:'LINEA 2 PRUDENTE',k:'BIL',i2:2.37,i5:1.67,i10:1.49,i35:1.38},
-              {c:'LINEA 3 EQUILIBRATA',k:'BIL',i2:2.57,i5:1.88,i10:1.7,i35:1.59},
-              {c:'LINEA 4 DINAMICA',k:'AZN',i2:2.89,i5:2.19,i10:2.01,i35:1.9},
-            ],
-            'BAP PENSIONE 2007 FONDO PENSIONE APERTO': [
-              {c:'EQUILIBRIO',k:'BIL',i2:2.37,i5:1.72,i10:1.6,i35:1.56},
-              {c:'INVESTIMENTO',k:'AZN',i2:2.63,i5:1.98,i10:1.86,i35:1.82},
-              {c:'TFR',k:'GAR',i2:2.06,i5:1.41,i10:1.29,i35:1.25},
-            ],
-            'CORE PENSION FONDO PENSIONE APERTO': [
-              {c:'AZIONARIO 75% ESG',k:'AZN',i2:1.82,i5:1.44,i10:1.29,i35:1.18},
-              {c:'AZIONARIO PLUS 90% ESG',k:'AZN',i2:1.98,i5:1.6,i10:1.45,i35:1.34},
-              {c:'BILANCIATO 50% ESG',k:'BIL',i2:1.67,i5:1.28,i10:1.14,i35:1.03},
-              {c:'GARANTITO ESG',k:'GAR',i2:1.51,i5:1.13,i10:0.98,i35:0.87},
-              {c:'OBBLIGAZIONARIO MISTO 25% ESG',k:'OBB',i2:1.51,i5:1.13,i10:0.98,i35:0.87},
-            ],
-            'AZIMUT SUSTAINABLE FUTURE -FONDO PENSIONE APERTO': [
-              {c:'BILANCIATO',k:'BIL',i2:3.18,i5:2.12,i10:1.82,i35:1.62},
-              {c:'BILANCIATO ACCRESCITIVO',k:'BIL',i2:3.49,i5:2.43,i10:2.13,i35:1.93},
-              {c:'BILANCIATO CONSERVATIVO',k:'BIL',i2:2.66,i5:1.6,i10:1.3,i35:1.1},
-            ],
-            'FONDO PENSIONE APERTO  VERA VITA': [
-              {c:'POPOLARE-BOND',k:'GAR',i2:2.07,i5:1.34,i10:1.2,i35:1.15},
-              {c:'POPOLARE-GEST',k:'GAR',i2:2.12,i5:1.39,i10:1.25,i35:1.2},
-              {c:'POPOLARE-MIX',k:'BIL',i2:2.16,i5:1.44,i10:1.3,i35:1.25},
-            ],
-            'PROGRAMMA OPEN FONDO PENSIONE APERTO': [
-              {c:'BILANCIATO ETICO',k:'BIL',i2:3.46,i5:1.96,i10:1.58,i35:1.36},
-              {c:'NUOVO OBBLIGAZIONARIO ETICO',k:'GAR',i2:3.26,i5:1.76,i10:1.38,i35:1.16},
-              {c:'PREVALENTEMENTE AZIONARIO ETICO',k:'AZN',i2:3.66,i5:2.17,i10:1.78,i35:1.56},
-            ],
-          },
-          PIP: {
-            'CBA PREVIDENZA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CBA APPRODO',k:'GAR',i2:1.94,i5:1.37,i10:1.25,i35:1.21},
-              {c:'CBA ORIZZONTE 30',k:'BIL',i2:2.57,i5:2.0,i10:1.88,i35:1.84},
-              {c:'CBA ORIZZONTE 60',k:'BIL',i2:2.8,i5:2.23,i10:2.11,i35:2.07},
-            ],
-            'OUVERTURE 2007 - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'BAP GESTIONE PREVIDENZA',k:'GAR',i2:3.56,i5:2.52,i10:2.05,i35:1.65},
-            ],
-            'POSTAPREVIDENZA VALORE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'POSTA PENSIONE',k:'GAR',i2:2.72,i5:1.85,i10:1.45,i35:1.07},
-              {c:'POSTE VITA PREVIDENZA FLESSIBILE',k:'BIL',i2:2.72,i5:1.85,i10:1.45,i35:1.07},
-            ],
-            'ALLEATA PREVIDENZA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'ALLEATA AZIONARIA',k:'AZN',i2:4.71,i5:3.03,i10:2.44,i35:2.01},
-              {c:'ALLEATA BILANCIATA',k:'BIL',i2:4.49,i5:2.81,i10:2.22,i35:1.79},
-              {c:'ALLEATA GARANTITA',k:'GAR',i2:4.16,i5:2.48,i10:1.89,i35:1.45},
-            ],
-            'PREVIDENZA HDI - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'HDI FONDO PENSIONE',k:'GAR',i2:3.33,i5:2.07,i10:1.56,i35:1.15},
-            ],
-            'FUTURO ATTIVO – PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO – FONDO PENSIONE': [
-              {c:'PREVIDENZA CONCRETA',k:'GAR',i2:4.71,i5:3.0,i10:2.21,i35:1.55},
-            ],
-            'AXA MPS PREVIDENZA ATTIVA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'MPV PREVIDENZA',k:'GAR',i2:3.06,i5:2.24,i10:1.93,i35:1.69},
-              {c:'MPV PREVIDENZA AGGRESSIVO',k:'AZN',i2:3.85,i5:3.04,i10:2.73,i35:2.49},
-              {c:'MPV PREVIDENZA EQUILIBRATO',k:'BIL',i2:3.61,i5:2.79,i10:2.48,i35:2.24},
-            ],
-            'AXA MPS PREVIDENZA PERSONALE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'MPV PREVIDENZA',k:'GAR',i2:3.69,i5:2.55,i10:2.05,i35:1.65},
-              {c:'MPV PREVIDENZA AGGRESSIVO',k:'AZN',i2:4.57,i5:3.45,i10:2.96,i35:2.56},
-              {c:'MPV PREVIDENZA EQUILIBRATO',k:'BIL',i2:4.33,i5:3.2,i10:2.71,i35:2.31},
-            ],
-            'VIPENSIONO - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EUROVIP',k:'AZN',i2:3.84,i5:2.82,i10:2.32,i35:1.93},
-              {c:'FONDO VIP',k:'GAR',i2:4.23,i5:2.86,i10:2.21,i35:1.68},
-            ],
-            'NUOVA PENSIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'LVA DINAMICO PREVIDENZA',k:'AZN',i2:5.84,i5:4.18,i10:3.56,i35:3.09},
-              {c:'RI.ALTO PREVIDENZA',k:'GAR',i2:4.45,i5:2.77,i10:2.14,i35:1.67},
-            ],
-            'BG PREVIDENZA ATTIVA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'LVA DINAMICO PREVIDENZA',k:'AZN',i2:5.62,i5:4.06,i10:3.5,i35:3.07},
-              {c:'RI.ALTO PREVIDENZA',k:'GAR',i2:4.22,i5:2.65,i10:2.08,i35:1.65},
-            ],
-            'PROGRAMMA PENSIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'ZURICH PENSION ESG AZIONARIO',k:'AZN',i2:4.66,i5:3.64,i10:3.18,i35:2.78},
-              {c:'ZURICH PENSION ESG FLEX 4',k:'BIL',i2:3.89,i5:2.86,i10:2.39,i35:1.99},
-              {c:'ZURICH PENSION ESG FLEX 8',k:'BIL',i2:4.34,i5:3.32,i10:2.85,i35:2.46},
-              {c:'ZURICH PENSION ESG PROTETTO',k:'OBB',i2:3.59,i5:2.56,i10:2.09,i35:1.69},
-            ],
-            'GROUPAMA PIANO PENSIONISTICO INDIVIDUALE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'VALOREPIU\' PREVIDENZA',k:'GAR',i2:4.93,i5:3.21,i10:2.46,i35:1.86},
-            ],
-            'ELIOS PREVIDENZA 2007 - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'FONDO ARMONICO  2007',k:'BIL',i2:3.87,i5:2.28,i10:1.84,i35:1.58},
-              {c:'FONDO ATTIVO  2007',k:'BIL',i2:3.87,i5:2.28,i10:1.84,i35:1.58},
-              {c:'FONDO PROTETTO 2007',k:'GAR',i2:3.87,i5:2.28,i10:1.84,i35:1.58},
-            ],
-            'TAXBENEFIT NEW - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CHALLENGE PROVIDENT FUND 1',k:'AZN',i2:3.63,i5:3.27,i10:3.08,i35:2.95},
-              {c:'CHALLENGE PROVIDENT FUND 2',k:'BIL',i2:3.04,i5:2.67,i10:2.49,i35:2.35},
-              {c:'CHALLENGE PROVIDENT FUND 3',k:'OBB',i2:2.21,i5:1.82,i10:1.64,i35:1.51},
-              {c:'CHALLENGE PROVIDENT FUND 4',k:'OBB',i2:1.76,i5:1.37,i10:1.19,i35:1.06},
-              {c:'CHALLENGE PROVIDENT FUND 5',k:'BIL',i2:1.84,i5:1.59,i10:1.43,i35:1.31},
-            ],
-            'CNP TOP PENSION - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CNP PIP AZIONARIO',k:'AZN',i2:3.76,i5:2.75,i10:2.38,i35:2.1},
-              {c:'CNP PIP BILANCIATO',k:'BIL',i2:3.61,i5:2.6,i10:2.23,i35:1.95},
-              {c:'CNP PIP FLESSIBILE',k:'BIL',i2:3.46,i5:2.45,i10:2.08,i35:1.8},
-              {c:'CNP PIP OBBLIGAZIONARIO',k:'OBB',i2:3.26,i5:2.25,i10:1.88,i35:1.6},
-              {c:'GEPI',k:'GAR',i2:2.97,i5:1.95,i10:1.58,i35:1.3},
-            ],
-            'CRÉDIT AGRICOLE VITA PENSIONE PIU\' - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CRÉDIT AGRICOLE VITA PREVIDENZA',k:'GAR',i2:2.63,i5:1.68,i10:1.4,i35:1.21},
-            ],
-            'PROGRAMMA PER TE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'VALOREPIU\' PREVIDENZA',k:'GAR',i2:4.4,i5:2.84,i10:2.13,i35:1.53},
-              {c:'VALOREPIÙ AZIONARIO PREVIDENZA',k:'AZN',i2:4.98,i5:3.44,i10:2.73,i35:2.13},
-            ],
-            'PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - PROGRESSIVE PENSION PLAN - PROGRAMMA DINAMICO - FONDO PENSIONE': [
-              {c:'CONTROL',k:'OBB',i2:3.53,i5:2.13,i10:1.79,i35:1.6},
-              {c:'MEDIUM',k:'BIL',i2:3.87,i5:2.47,i10:2.13,i35:1.94},
-              {c:'POWER',k:'AZN',i2:4.1,i5:2.7,i10:2.36,i35:2.17},
-            ],
-            'PIP PROGETTO PENSIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EV PREVI',k:'GAR',i2:4.01,i5:2.5,i10:1.99,i35:1.63},
-              {c:'STRATEGIA 15',k:'OBB',i2:4.17,i5:2.66,i10:2.15,i35:1.79},
-              {c:'STRATEGIA 30',k:'BIL',i2:4.42,i5:2.91,i10:2.41,i35:2.04},
-              {c:'STRATEGIA 40',k:'BIL',i2:4.71,i5:3.21,i10:2.71,i35:2.34},
-              {c:'STRATEGIA 55',k:'AZN',i2:5.01,i5:3.51,i10:3.01,i35:2.63},
-              {c:'STRATEGIA 70',k:'AZN',i2:5.16,i5:3.66,i10:3.16,i35:2.79},
-            ],
-            'VITA&PREVIDENZA SANPAOLO PIU\'  - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EV PREVI',k:'GAR',i2:4.01,i5:2.5,i10:1.99,i35:1.63},
-              {c:'GLOBAL EQUITY PREVI',k:'AZN',i2:5.14,i5:3.64,i10:3.14,i35:2.77},
-            ],
-            'MODUS. PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'BCC VITA EQUITY AMERICA PIP',k:'AZN',i2:6.43,i5:4.81,i10:4.06,i35:3.43},
-              {c:'BCC VITA EQUITY ASIA PIP',k:'AZN',i2:6.43,i5:4.81,i10:4.06,i35:3.43},
-              {c:'BCC VITA EQUITY EUROPA PIP',k:'AZN',i2:6.44,i5:4.82,i10:4.07,i35:3.44},
-              {c:'BCC VITA GARANTITA PIP',k:'GAR',i2:4.8,i5:3.15,i10:2.39,i35:1.75},
-              {c:'BCC VITA WORLD GLOBAL BOND PIP',k:'OBB',i2:5.02,i5:3.37,i10:2.61,i35:1.97},
-            ],
-            'PENSIONE GARANTITA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'FONDO VIP',k:'GAR',i2:2.52,i5:1.65,i10:1.25,i35:0.92},
-            ],
-            'AVIVA VITA - PRO FUTURO - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'AVIVA-UBI',k:'GAR',i2:2.6,i5:1.71,i10:1.37,i35:1.1},
-              {c:'AVIVA-UBI 1',k:'OBB',i2:2.99,i5:2.1,i10:1.76,i35:1.49},
-              {c:'AVIVA-UBI 2',k:'BIL',i2:3.19,i5:2.3,i10:1.96,i35:1.69},
-              {c:'AVIVA-UBI 3',k:'BIL',i2:3.39,i5:2.5,i10:2.16,i35:1.89},
-              {c:'AVIVA-UBI 4',k:'AZN',i2:3.48,i5:2.6,i10:2.26,i35:1.99},
-            ],
-            'CENTO STELLE REALE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'REALE LINEA EQUILIBRIO',k:'BIL',i2:3.07,i5:2.28,i10:2.0,i35:1.79},
-              {c:'REALE LINEA FUTURO',k:'AZN',i2:3.56,i5:2.78,i10:2.5,i35:2.29},
-              {c:'REALE LINEA PRUDENTE',k:'OBB',i2:1.73,i5:0.93,i10:0.64,i35:0.43},
-            ],
-            'FEELGOOD - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'ITALIANA LINEA EQUILIBRIO',k:'BIL',i2:2.75,i5:2.05,i10:1.79,i35:1.59},
-              {c:'ITALIANA LINEA FUTURO',k:'AZN',i2:3.19,i5:2.49,i10:2.23,i35:2.03},
-              {c:'ITALIANA LINEA PRUDENTE',k:'OBB',i2:1.56,i5:0.85,i10:0.58,i35:0.38},
-            ],
-            'SENIORVITA VALORE FUTURO - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PROGETTO MEDIUM',k:'BIL',i2:5.35,i5:3.52,i10:2.9,i35:2.46},
-              {c:'PROGETTO OPPORTUNITY',k:'AZN',i2:5.64,i5:3.82,i10:3.2,i35:2.76},
-              {c:'PROGETTO SMART',k:'OBB',i2:5.1,i5:3.27,i10:2.65,i35:2.21},
-              {c:'PROGETTO SPRINT',k:'AZN',i2:5.45,i5:3.62,i10:3.0,i35:2.56},
-              {c:'SENIORVITA PREVIDENZIALE',k:'GAR',i2:4.27,i5:2.42,i10:1.8,i35:1.35},
-            ],
-            'PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE PREVINEXT': [
-              {c:'PREVINEXT BALANCED',k:'BIL',i2:2.73,i5:2.25,i10:2.03,i35:1.85},
-              {c:'PREVINEXT DYNAMIC',k:'AZN',i2:2.82,i5:2.34,i10:2.12,i35:1.94},
-              {c:'PREVINEXT FUTURO SICURO',k:'GAR',i2:2.23,i5:1.74,i10:1.52,i35:1.34},
-            ],
-            'PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE PREVINEXT PLATINUM': [
-              {c:'PREVINEXT BALANCED',k:'BIL',i2:3.01,i5:2.39,i10:2.11,i35:1.87},
-              {c:'PREVINEXT DYNAMIC',k:'AZN',i2:3.1,i5:2.48,i10:2.2,i35:1.96},
-              {c:'PREVINEXT FUTURO SICURO',k:'GAR',i2:2.5,i5:1.88,i10:1.6,i35:1.36},
-            ],
-            'PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO  - FONDO PENSIONE GUARDO AVANTI NEW': [
-              {c:'CATTOLICA PREVIDENZA AZIONARIO',k:'AZN',i2:3.04,i5:2.38,i10:2.09,i35:1.84},
-              {c:'CATTOLICA PREVIDENZA BILANCIATO',k:'BIL',i2:2.84,i5:2.18,i10:1.89,i35:1.64},
-              {c:'CATTOLICA PREVIDENZA SICURO',k:'GAR',i2:2.62,i5:1.96,i10:1.66,i35:1.42},
-            ],
-            'PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE - PUNTALTO': [
-              {c:'CATTOLICA PREVIDENZA AZIONARIO',k:'AZN',i2:3.31,i5:2.52,i10:2.16,i35:1.86},
-              {c:'CATTOLICA PREVIDENZA BILANCIATO',k:'BIL',i2:3.11,i5:2.32,i10:1.96,i35:1.66},
-              {c:'CATTOLICA PREVIDENZA SICURO',k:'GAR',i2:2.9,i5:2.1,i10:1.74,i35:1.44},
-            ],
-            'CATTOLICA PREVIDENZA PROGETTO PENSIONE BIS - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EV STRATEGIA INTERNAZIONALE',k:'AZN',i2:2.31,i5:1.67,i10:1.56,i35:1.52},
-              {c:'GESTIONE PREVIDENZA',k:'GAR',i2:2.31,i5:1.67,i10:1.56,i35:1.52},
-            ],
-            'DOMANI SICURO PLUS - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PREFIN FUTURO',k:'GAR',i2:4.6,i5:2.95,i10:2.18,i35:1.53},
-              {c:'PREVIDENZA FUTURO AGGRESSIVA',k:'AZN',i2:5.26,i5:3.62,i10:2.86,i35:2.21},
-            ],
-            'AXA PROGETTO PENSIONE PIU\' - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'AXA PREVIDENZA ASSOLUTO',k:'BIL',i2:4.12,i5:2.55,i10:1.98,i35:1.55},
-              {c:'AXA PREVIDENZA EUROPA',k:'AZN',i2:4.12,i5:2.55,i10:1.98,i35:1.55},
-              {c:'AXA PREVIDENZA INTERNAZIONALE',k:'AZN',i2:4.12,i5:2.55,i10:1.98,i35:1.55},
-              {c:'GESTIRIV PREVIDENZA',k:'GAR',i2:4.12,i5:2.55,i10:1.98,i35:1.55},
-            ],
-            'SARA MULTISTRATEGY PIP - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'FUTURO&PREVIDENZA',k:'GAR',i2:4.57,i5:3.13,i10:2.58,i35:2.16},
-              {c:'SARA PREVIFUTURO  - COMPARTO AZIONARIO INTERNAZIONALE',k:'AZN',i2:4.79,i5:3.28,i10:2.7,i35:2.25},
-              {c:'SARA PREVIFUTURO  - COMPARTO OBBLIGAZIONARIO EUROPEO',k:'OBB',i2:4.79,i5:3.28,i10:2.7,i35:2.25},
-            ],
-            'CENTO STELLE TAXPLAN - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PREVIDENZA REALE',k:'GAR',i2:4.61,i5:3.06,i10:2.35,i35:1.75},
-            ],
-            'PLANNER - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'ITALIANA LINEA PREVIDENZA',k:'GAR',i2:4.61,i5:3.06,i10:2.35,i35:1.75},
-            ],
-            'VERA VITA PREVIDENZA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'POPOLARE VITA PREVIDENZA',k:'GAR',i2:3.88,i5:2.48,i10:1.99,i35:1.63},
-              {c:'POPOLARE VITA VALUE',k:'AZN',i2:4.18,i5:2.78,i10:2.29,i35:1.93},
-            ],
-            'PENSIONLINE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'LVA AZIONARIO PREVIDENZA',k:'AZN',i2:1.04,i5:1.04,i10:1.04,i35:1.04},
-              {c:'RI.ALTO PREVIDENZA',k:'GAR',i2:1.4,i5:1.4,i10:1.4,i35:1.4},
-            ],
-            'HELVETIA AEQUA PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIO': [
-              {c:'HELVETIA MULTIMANAGER EQUITY',k:'AZN',i2:1.87,i5:1.87,i10:1.87,i35:1.87},
-              {c:'HELVETIA MULTIMANAGER FLESSIBILE',k:'BIL',i2:1.56,i5:1.56,i10:1.56,i35:1.56},
-              {c:'HV PREVIREND',k:'GAR',i2:1.2,i5:1.2,i10:1.2,i35:1.2},
-            ],
-            'CATTOLICAPREVIDENZAPERLAPENSIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EV STRATEGIA INTERNAZIONALE',k:'AZN',i2:4.38,i5:2.7,i10:2.11,i35:1.67},
-              {c:'GESTIONE PREVIDENZA',k:'GAR',i2:4.38,i5:2.7,i10:2.11,i35:1.67},
-            ],
-            'PIANO INDIVIDUALE PENSIONISTICO VITTORIA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'FONDO VITTORIA PREVIDENZA',k:'GAR',i2:3.76,i5:2.33,i10:1.78,i35:1.35},
-              {c:'FONDO VITTORIA PREVIDENZA FLESSIBILE',k:'BIL',i2:4.14,i5:2.73,i10:2.18,i35:1.76},
-            ],
-            'FUTURO - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'FUTURIV',k:'GAR',i2:4.24,i5:2.76,i10:2.1,i35:1.56},
-            ],
-            'IL MIO FUTURO - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EV PREVI',k:'GAR',i2:3.43,i5:2.21,i10:1.8,i35:1.5},
-              {c:'LUNGO TERMINE',k:'BIL',i2:3.74,i5:2.52,i10:2.12,i35:1.81},
-              {c:'MEDIO TERMINE',k:'BIL',i2:3.44,i5:2.22,i10:1.81,i35:1.51},
-            ],
-            'BAPCRESCENDOPREVIDENTE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'BAP GESTIONE PREVIDENZA',k:'GAR',i2:2.8,i5:1.94,i10:1.74,i35:1.63},
-            ],
-            'UNICREDIT PENSIONE PIP - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CNP PREVIDENZA EQUITY',k:'AZN',i2:3.95,i5:3.1,i10:2.71,i35:2.38},
-              {c:'SENIORVITA PREVIDENZIALE',k:'GAR',i2:2.96,i5:2.1,i10:1.7,i35:1.38},
-            ],
-            'UNICREDIT PREVIDENZA PIP  - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CREDITRAS PREVI',k:'GAR',i2:2.96,i5:2.1,i10:1.7,i35:1.38},
-              {c:'CREDITRAS PREVIDENZA EQUITY',k:'AZN',i2:3.95,i5:3.1,i10:2.71,i35:2.38},
-            ],
-            'UNICREDIT FUTURO PIP CNP - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CNP ASSICURAZIONE PREVIDENZA EQUITY',k:'AZN',i2:3.95,i5:3.1,i10:2.71,i35:2.38},
-              {c:'GEPI',k:'GAR',i2:2.96,i5:2.1,i10:1.7,i35:1.38},
-            ],
-            'VERA VITA PENSIONE SICURA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'POPOLARE VITA BILANCIATO GLOBAL',k:'BIL',i2:4.77,i5:3.38,i10:2.89,i35:2.53},
-              {c:'POPOLARE VITA PREVIDENZA',k:'GAR',i2:3.93,i5:2.53,i10:2.04,i35:1.68},
-              {c:'POPOLARE VITA PRUDENTE',k:'OBB',i2:4.03,i5:2.63,i10:2.14,i35:1.78},
-              {c:'POPOLARE VITA VALUE',k:'AZN',i2:4.18,i5:2.78,i10:2.29,i35:1.93},
-            ],
-            'BNL PIANOPENSIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'VALORPLUS',k:'AZN',i2:3.82,i5:2.23,i10:1.81,i35:1.55},
-              {c:'VALORPREVI',k:'GAR',i2:3.72,i5:2.13,i10:1.7,i35:1.52},
-            ],
-            'MIA PENSIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'GESTIRIV PREVIDENZA',k:'GAR',i2:4.57,i5:2.82,i10:2.17,i35:1.68},
-              {c:'PREVIDENZA EURO SMALL CAP',k:'AZN',i2:5.26,i5:3.52,i10:2.88,i35:2.38},
-              {c:'PREVIDENZA MEGATREND',k:'AZN',i2:5.26,i5:3.52,i10:2.88,i35:2.38},
-            ],
-            'LIBERO DOMANI - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'FUTURO&PREVIDENZA',k:'GAR',i2:4.07,i5:2.5,i10:1.93,i35:1.5},
-              {c:'SARA PREVIFUTURO  - COMPARTO AZIONARIO INTERNAZIONALE',k:'AZN',i2:4.79,i5:3.28,i10:2.7,i35:2.25},
-              {c:'SARA PREVIFUTURO  - COMPARTO OBBLIGAZIONARIO EUROPEO',k:'OBB',i2:4.79,i5:3.28,i10:2.7,i35:2.25},
-            ],
-            'CRÉDIT AGRICOLE VITA PROGETTO PREVIDENZA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CRÉDIT AGRICOLE VITA PREVIDENZA',k:'GAR',i2:2.68,i5:1.73,i10:1.45,i35:1.26},
-              {c:'PROGETTO PREVIDENZA 2035',k:'BIL',i2:3.58,i5:2.63,i10:2.35,i35:2.16},
-              {c:'PROGETTO PREVIDENZA 2040',k:'BIL',i2:3.58,i5:2.63,i10:2.35,i35:2.16},
-              {c:'PROGETTO PREVIDENZA 2045',k:'BIL',i2:3.58,i5:2.63,i10:2.35,i35:2.16},
-              {c:'PROGETTO PREVIDENZA 2025',k:'BIL',i2:3.58,i5:2.63,i10:2.35,i35:2.16},
-              {c:'PROGETTO PREVIDENZA 2030',k:'BIL',i2:3.58,i5:2.63,i10:2.35,i35:2.16},
-            ],
-            'ORIZZONTE PREVIDENZA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'AZIONARIO GLOBALE',k:'AZN',i2:3.16,i5:2.63,i10:2.53,i35:2.5},
-              {c:'BILANCIATO',k:'BIL',i2:2.96,i5:2.43,i10:2.33,i35:2.3},
-              {c:'FORMULA ATTIVA',k:'BIL',i2:3.16,i5:2.63,i10:2.53,i35:2.5},
-              {c:'FORMULA EQUILIBRATA',k:'BIL',i2:2.96,i5:2.43,i10:2.33,i35:2.3},
-              {c:'FORMULA MODERATA',k:'BIL',i2:2.66,i5:2.13,i10:2.03,i35:2.0},
-              {c:'FORMULA SERENA',k:'BIL',i2:2.16,i5:1.62,i10:1.53,i35:1.5},
-              {c:'FORMULA SICURA',k:'GAR',i2:2.16,i5:1.62,i10:1.53,i35:1.5},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:2.46,i5:1.93,i10:1.83,i35:1.8},
-            ],
-            'PENSIONE DOMANI - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'EUROVITA AZIONE PIU\'',k:'AZN',i2:5.07,i5:3.59,i10:2.94,i35:2.41},
-              {c:'NUOVO PPB',k:'GAR',i2:4.24,i5:2.76,i10:2.1,i35:1.56},
-            ],
-            'CNP VALORE INTEGRATIVO - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'CNP ASSICURAZIONE PREVIDENZA EQUITY',k:'AZN',i2:5.33,i5:3.64,i10:2.96,i35:2.41},
-              {c:'CNP PIP AZIONARIO',k:'AZN',i2:5.14,i5:3.45,i10:2.76,i35:2.21},
-              {c:'CNP PIP BILANCIATO',k:'BIL',i2:4.99,i5:3.3,i10:2.61,i35:2.06},
-              {c:'CNP PIP FLESSIBILE',k:'BIL',i2:4.84,i5:3.15,i10:2.46,i35:1.91},
-              {c:'CNP PIP OBBLIGAZIONARIO',k:'OBB',i2:4.65,i5:2.95,i10:2.25,i35:1.71},
-              {c:'GEPI',k:'GAR',i2:4.35,i5:2.65,i10:1.95,i35:1.4},
-            ],
-            'CREDEMVITA FUTURA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'AZIONARIO',k:'AZN',i2:3.86,i5:2.85,i10:2.48,i35:2.2},
-              {c:'BILANCIATO',k:'BIL',i2:3.71,i5:2.7,i10:2.33,i35:2.05},
-              {c:'FLESSIBILE',k:'BIL',i2:3.56,i5:2.55,i10:2.18,i35:1.9},
-              {c:'OBBLIGAZIONARIO',k:'OBB',i2:3.36,i5:2.35,i10:1.98,i35:1.7},
-            ],
-            'UNIPOL PREVIDENZA FUTURA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PREVIGLOBALE',k:'AZN',i2:4.54,i5:3.17,i10:2.54,i35:2.01},
-              {c:'PREVIATTIVA UNIPOL',k:'GAR',i2:4.25,i5:2.87,i10:2.23,i35:1.71},
-            ],
-            'PIANO PENSIONE MONEYFARM - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'MFM LINEA AZIONARIA',k:'BIL',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-              {c:'MFM LINEA BILANCIATA',k:'BIL',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-              {c:'MFM LINEA FUTURO',k:'BIL',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-              {c:'MFM LINEA MODERATA',k:'BIL',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-              {c:'MFM LINEA ORIZZONTE',k:'BIL',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-              {c:'MFM LINEA PRUDENTE',k:'BIL',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-              {c:'MFM LINEA INTRAPRENDENTE',k:'AZN',i2:1.62,i5:1.48,i10:1.42,i35:1.37},
-            ],
-            'GENERAZIONE PREVIDENTE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'A.G. EUROPEAN EQUITY',k:'AZN',i2:6.0,i5:4.08,i10:3.18,i35:2.43},
-              {c:'GENERALI AZIONE SOSTENIBILE',k:'AZN',i2:5.85,i5:3.92,i10:3.03,i35:2.27},
-              {c:'GENERALI OBIETTIVO PROTEZIONE',k:'BIL',i2:5.4,i5:3.46,i10:2.55,i35:1.8},
-              {c:'GENERALI SCELTA SOSTENIBILE',k:'BIL',i2:5.6,i5:3.66,i10:2.76,i35:2.01},
-              {c:'GESAV GLOBAL',k:'GAR',i2:5.2,i5:3.25,i10:2.35,i35:1.59},
-              {c:'GLOBAL MULTI ASSET',k:'BIL',i2:4.95,i5:2.99,i10:2.08,i35:1.33},
-            ],
-            'PENSIONE FUTURA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PENSIONE FUTURA           LINEA DINAMICA',k:'AZN',i2:4.69,i5:3.13,i10:2.56,i35:2.13},
-              {c:'PENSIONE FUTURA          LINEA GARANTITA',k:'GAR',i2:4.02,i5:2.45,i10:1.88,i35:1.45},
-            ],
-            'PIANO PENSIONISTICO 4026 - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'NUOVO PPB',k:'GAR',i2:4.32,i5:2.65,i10:1.88,i35:1.24},
-            ],
-            'PIANO PENSIONISTICO 4036 - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'NUOVO PPB',k:'GAR',i2:4.32,i5:2.65,i10:1.88,i35:1.24},
-            ],
-            'PIANO PENSIONISTICO 4046 - PIANO INDIVIDUALE PENSIONISTICI DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'NUOVO PPB',k:'GAR',i2:4.32,i5:2.65,i10:1.88,i35:1.24},
-            ],
-            'TAX QUALIFIED ANNUITY III - RENDITA DI PREVIDENZA QUALIFICATA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PREVI',k:'GAR',i2:4.44,i5:2.7,i10:1.91,i35:1.26},
-            ],
-            'NG - NUOVA GENERAZIONE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'NUOVO PPB',k:'GAR',i2:3.2,i5:2.05,i10:1.55,i35:1.15},
-            ],
-            'ATHORA FUTURO PREVIDENZA - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'ATHORA FUTURO AZIONARIO',k:'AZN',i2:4.21,i5:3.03,i10:2.58,i35:2.23},
-              {c:'ATHORA FUTURO FLESSIBILE',k:'BIL',i2:3.91,i5:2.73,i10:2.28,i35:1.93},
-              {c:'ATHORA ITALIA - LINEA VALORE',k:'GAR',i2:3.62,i5:2.43,i10:1.98,i35:1.63},
-            ],
-            'UNIPOL FUTURO PRESENTE - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'PREVIATTIVA UNIPOL',k:'GAR',i2:4.83,i5:2.91,i10:2.17,i35:1.61},
-            ],
-            'PENSIONE INTEGRATIVA GENERTEL - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'GENERTEL AZIONARIO PREVIDENZA',k:'AZN',i2:1.04,i5:1.04,i10:1.04,i35:1.04},
-              {c:'PREVIDENZA CONCRETA',k:'GAR',i2:1.3,i5:1.3,i10:1.3,i35:1.3},
-            ],
-            'BG PREVIDENZA ATTIVA PREMIUM - PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'AZIONARIO PREVIDENZA ATTIVA PREMIUM',k:'AZN',i2:4.47,i5:3.38,i10:2.88,i35:2.46},
-              {c:'OBBLIGAZIONARIO PREVIDENZA ATTIVA PREMIUM',k:'OBB',i2:3.96,i5:2.86,i10:2.35,i35:1.93},
-              {c:'RI.ALTO PREVIDENZA',k:'GAR',i2:3.5,i5:2.39,i10:1.88,i35:1.46},
-            ],
-            'ZURICH SPAZIO PREVIDENZA -PIANO INDIVIDUALE PENSIONISTICO DI TIPO ASSICURATIVO - FONDO PENSIONE': [
-              {c:'ZURICH PENSION ESG AZIONARIO',k:'AZN',i2:4.57,i5:3.55,i10:3.08,i35:2.69},
-              {c:'ZURICH PENSION ESG FLEX 4',k:'BIL',i2:3.9,i5:2.87,i10:2.4,i35:2.0},
-              {c:'ZURICH PENSION ESG FLEX 8',k:'BIL',i2:4.19,i5:3.17,i10:2.7,i35:2.31},
-              {c:'ZURICH PENSION GARANTITA',k:'GAR',i2:3.38,i5:2.32,i10:1.85,i35:1.45},
-            ],
-          },
-        };
-
-        function populateFundNames(tipo) {
-            const sel = document.getElementById('pensionFundName');
-            sel.innerHTML = '<option value="">— seleziona —</option>';
-            if (!tipo || tipo === 'custom') return;
-            const funds = COVIP_ISC[tipo];
-            Object.keys(funds).sort().forEach(name => {
-                const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = name;
-                sel.appendChild(opt);
-            });
-        }
-
-        function populateComparti(tipo, fundName) {
-            const sel = document.getElementById('pensionFundComparto');
-            sel.innerHTML = '<option value="">— seleziona —</option>';
-            if (!tipo || !fundName || !COVIP_ISC[tipo][fundName]) return;
-            const catLabel = {GAR:'Garantito',OBB:'Obbligazionario',BIL:'Bilanciato',AZN:'Azionario'};
-            COVIP_ISC[tipo][fundName].forEach((comp, i) => {
-                const opt = document.createElement('option');
-                opt.value = i;
-                const cat = catLabel[comp.k] || comp.k;
-                opt.textContent = `${comp.c} (${cat}) — ISC 35a: ${comp.i35}%`;
-                sel.appendChild(opt);
-            });
-        }
-
-        // Rendimenti medi storici COVIP per categoria (fonte: relazione annuale COVIP)
-        const RENDIMENTI_DEFAULT = { GAR: 1.5, OBB: 2.5, BIL: 3.5, AZN: 5.0 };
-
-        function applyISC(tipo, fundName, idx) {
-            if (!tipo || !fundName || idx === '') {
-                document.getElementById('pensionISCInfo').style.display = 'none';
-                return;
-            }
-            const comp = COVIP_ISC[tipo][fundName][idx];
-            if (!comp) return;
-            document.getElementById('pensionCosts').value = comp.i35;
-            if (RENDIMENTI_DEFAULT[comp.k] !== undefined) {
-                document.getElementById('pensionRateGross').value = RENDIMENTI_DEFAULT[comp.k];
-            }
-            const catLabel = {GAR:'Garantito',OBB:'Obbligazionario',BIL:'Bilanciato',AZN:'Azionario'};
-            document.getElementById('iscVal2').textContent = comp.i2 + '%';
-            document.getElementById('iscVal5').textContent = comp.i5 + '%';
-            document.getElementById('iscVal10').textContent = comp.i10 + '%';
-            document.getElementById('iscVal35').textContent = comp.i35 + '%';
-            document.getElementById('iscCategoria').textContent = (catLabel[comp.k] || comp.k) + ' ' + (RENDIMENTI_DEFAULT[comp.k] || '—') + '%';
-            document.getElementById('pensionISCInfo').style.display = 'block';
-            updateAll();
-        }
-
-        document.getElementById('pensionFundType').addEventListener('change', (e) => {
-            const tipo = e.target.value;
-            const isCustom = tipo === 'custom';
-            document.getElementById('pensionFundNameGroup').style.display = isCustom ? 'none' : '';
-            document.getElementById('pensionFundCompartoGroup').style.display = 'none';
-            document.getElementById('pensionISCInfo').style.display = 'none';
-            populateFundNames(tipo);
-        });
-
-        document.getElementById('pensionFundName').addEventListener('change', (e) => {
-            const tipo = document.getElementById('pensionFundType').value;
-            const fundName = e.target.value;
-            const showComp = !!fundName;
-            document.getElementById('pensionFundCompartoGroup').style.display = showComp ? '' : 'none';
-            document.getElementById('pensionISCInfo').style.display = 'none';
-            populateComparti(tipo, fundName);
-        });
-
-        document.getElementById('pensionFundComparto').addEventListener('change', (e) => {
-            const tipo = document.getElementById('pensionFundType').value;
-            const fundName = document.getElementById('pensionFundName').value;
-            applyISC(tipo, fundName, e.target.value);
-        });
-
-        // ========================================
-        // AGGIORNA TUTTO
-        // ========================================
-        function updateAll() {
-            const tfrOld = calculateTFROld();
-            const tfr = calculateTFRWithoutPension();
-            const pension = calculateTFRWithPension();
-            const conto = calculateContoDeposito();
-            const pac = calculatePAC();
-
-            document.getElementById('table-tfr-old-initial').textContent = formatCurrency(tfrOld.initial);
-            document.getElementById('table-tfr-old-contrib').textContent = formatCurrency(tfrOld.contrib);
-            document.getElementById('table-tfr-old-gain').textContent = formatCurrency(tfrOld.gain);
-            document.getElementById('table-tfr-old-final').innerHTML = '<strong>' + formatCurrency(tfrOld.final) + '</strong>';
-
-            document.getElementById('table-tfr-initial').textContent = formatCurrency(tfr.initial);
-            document.getElementById('table-tfr-contrib').textContent = formatCurrency(tfr.contrib);
-            document.getElementById('table-tfr-gain').textContent = formatCurrency(tfr.gain);
-            document.getElementById('table-tfr-final').innerHTML = '<strong>' + formatCurrency(tfr.final) + '</strong>';
-
-            document.getElementById('table-pension-initial').textContent = formatCurrency(pension.initial);
-            document.getElementById('table-pension-contrib').textContent = formatCurrency(pension.contrib);
-            document.getElementById('table-pension-gain').textContent = formatCurrency(pension.gain);
-            document.getElementById('table-pension-final').innerHTML = '<strong>' + formatCurrency(pension.final) + '</strong>';
-
-            document.getElementById('table-cd-initial').textContent = formatCurrency(conto.initial);
-            document.getElementById('table-cd-contrib').textContent = formatCurrency(conto.contrib);
-            document.getElementById('table-cd-gain').textContent = formatCurrency(conto.gain);
-            document.getElementById('table-cd-final').innerHTML = '<strong>' + formatCurrency(conto.final) + '</strong>';
-
-            document.getElementById('table-pac-initial').textContent = formatCurrency(pac.initial);
-            document.getElementById('table-pac-contrib').textContent = formatCurrency(pac.contrib);
-            document.getElementById('table-pac-gain').textContent = formatCurrency(pac.gain);
-            document.getElementById('table-pac-final').innerHTML = '<strong>' + formatCurrency(pac.final) + '</strong>';
-
-            // Calcolo totale con checkboxes
-            const checkTFROld = document.getElementById('compareTFROld').checked;
-            const checkTFRNo = document.getElementById('compareTFRNo').checked;
-            const checkPension = document.getElementById('comparePension').checked;
-            const checkCD = document.getElementById('compareCD').checked;
-            const checkPAC = document.getElementById('comparePAC').checked;
-
-            const tfrOldToShow = checkTFROld ? tfrOld.final : 0;
-            const tfrToShow = checkTFRNo ? tfr.final : 0;
-            const pensionToShow = checkPension ? pension.final : 0;
-            const cdToShow = checkCD ? conto.final : 0;
-            const pacToShow = checkPAC ? pac.final : 0;
-
-            const grandTotal = tfrOldToShow + tfrToShow + pensionToShow + cdToShow + pacToShow;
-
-            document.getElementById('grandTotal').textContent = formatCurrency(grandTotal);
-            document.getElementById('grandTotal-tfr').textContent = formatCurrency(Math.max(tfrOldToShow, tfrToShow, pensionToShow));
-            document.getElementById('grandTotal-cd').textContent = formatCurrency(cdToShow);
-            document.getElementById('grandTotal-pac').textContent = formatCurrency(pacToShow);
-
-            updateChart(tfr.final, pension.final, conto.final, pac.final);
-        }
-
-        // ========================================
-        // GRAFICO COMPARATIVO
-        // ========================================
-        let chartInstance = null;
-
-        function updateChart(tfrFinal, pensionFinal, contoFinal, pacFinal) {
-            const ctx = document.getElementById('comparisonChart').getContext('2d');
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['TFR Senza Fondo', 'TFR Con Fondo', 'Conto Deposito', 'PAC'],
-                    datasets: [{
-                        label: 'Capitale Finale Netto (€)',
-                        data: [tfrFinal, pensionFinal, contoFinal, pacFinal],
-                        backgroundColor: [
-                            'rgba(99, 102, 241, 0.85)',
-                            'rgba(59, 130, 246, 0.85)',
-                            'rgba(16, 185, 129, 0.85)',
-                            'rgba(245, 158, 11, 0.85)'
-                        ],
-                        borderColor: [
-                            'rgb(99, 102, 241)',
-                            'rgb(59, 130, 246)',
-                            'rgb(16, 185, 129)',
-                            'rgb(245, 158, 11)'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 58, 102, 0.95)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            padding: 12,
-                            borderColor: '#D4AF37',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: function(context) {
-                                    return '€ ' + context.parsed.x.toLocaleString('it-IT', { 
-                                        minimumFractionDigits: 2, 
-                                        maximumFractionDigits: 2 
-                                    });
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            },
-                            ticks: {
-                                color: '#6B7280',
-                                callback: function(value) {
-                                    if (value >= 1000000) {
-                                        return '€ ' + (value / 1000000).toFixed(1) + 'M';
-                                    } else if (value >= 1000) {
-                                        return '€ ' + (value / 1000).toFixed(0) + 'k';
-                                    }
-                                    return '€ ' + value;
-                                }
-                            }
-                        },
-                        y: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                color: '#1A1A1A',
-                                font: {
-                                    weight: '500'
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // ============ SYNC: localStorage + Supabase ============
-        const SUPABASE_URL = 'https://cprslzjbzgemhxzsesdk.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_nKbWEDEFpa7rTEfUUZ_W-g_beLnFiiV';
-        const STORAGE_KEY = 'calc_state_v1';
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const allInputs = () => document.querySelectorAll('input[type=number]');
-
-        function readState() {
-            const obj = {};
-            // Numero inputs
-            allInputs().forEach(el => { obj[el.id] = el.value; });
-            // Checkboxes scenario
-            ['compareTFROld', 'compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) obj[id] = el.checked;
-            });
-            return obj;
-        }
-
-        function applyState(state) {
-            if (!state) return;
-            Object.entries(state).forEach(([id, val]) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                if (el.type === 'checkbox') {
-                    el.checked = Boolean(val);
-                } else {
-                    el.value = val;
-                }
-            });
-        }
-
-        function saveLocal() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                data: readState(),
-                updated_at: new Date().toISOString()
-            }));
-        }
-
-        function loadLocal() {
-            try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY));
-            } catch (e) { return null; }
-        }
-
-        let cloudTimer;
-        async function saveCloudDebounced() {
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) return;
-            clearTimeout(cloudTimer);
-            cloudTimer = setTimeout(async () => {
-                setStatus('Salvataggio...');
-                const { error } = await sb.from('scenarios').upsert({
-                    user_id: session.user.id,
-                    data: readState(),
-                    updated_at: new Date().toISOString()
-                });
-                if (error) {
-                    setStatus('Errore sync', 'error');
-                    console.error(error);
-                } else {
-                    setStatus('Sincronizzato', 'online');
-                }
-            }, 1500);
-        }
-
-        function setStatus(text, cls) {
-            const bar = document.getElementById('syncBar');
-            const status = document.getElementById('syncStatus');
-            status.textContent = text;
-            bar.classList.remove('online', 'error');
-            if (cls) bar.classList.add(cls);
-        }
-
-        async function onLogin(session) {
-            document.getElementById('syncForm').style.display = 'none';
-            document.getElementById('syncUser').style.display = 'flex';
-            document.getElementById('syncEmailDisplay').textContent = session.user.email;
-            setStatus('Caricamento...');
-
-            const { data: cloud, error } = await sb
-                .from('scenarios')
-                .select('data, updated_at')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-
-            if (error) {
-                setStatus('Errore: ' + error.message, 'error');
-                return;
-            }
-
-            const local = loadLocal();
-            const cloudTime = cloud ? new Date(cloud.updated_at).getTime() : 0;
-            const localTime = local?.updated_at ? new Date(local.updated_at).getTime() : 0;
-
-            if (cloud && cloudTime >= localTime) {
-                applyState(cloud.data);
-                saveLocal();
-                updateAll();
-                setStatus('Sincronizzato', 'online');
-            } else if (local) {
-                await sb.from('scenarios').upsert({
-                    user_id: session.user.id,
-                    data: local.data,
-                    updated_at: local.updated_at || new Date().toISOString()
-                });
-                setStatus('Sincronizzato', 'online');
-            } else {
-                setStatus('Sincronizzato', 'online');
-            }
-        }
-
-        function onLogout() {
-            document.getElementById('syncForm').style.display = 'flex';
-            document.getElementById('syncUser').style.display = 'none';
-            setStatus('Solo locale');
-        }
-
-        // ============ INIT ============
-        // 1) load local state BEFORE attaching listeners
-        const localState = loadLocal();
-        if (localState) applyState(localState.data);
-
-        // 2) attach listeners (calc + sync)
-        allInputs().forEach(el => {
-            el.addEventListener('input', () => {
-                updateAll();
-                saveLocal();
-                saveCloudDebounced();
-            });
-        });
-
-        // Scenario toggles
-        ['compareTFROld', 'compareTFRNo', 'comparePension', 'compareCD', 'comparePAC'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', () => {
-                    updateAll();
-                    saveLocal();
-                });
-            }
-        });
-
-        // 3) initial calc
-        updateAll();
-
-        // 4) auth wiring
-        document.getElementById('syncLogin').addEventListener('click', async () => {
-            const email = document.getElementById('syncEmail').value.trim();
-            if (!email) return;
-            setStatus('Invio link...');
-            const { error } = await sb.auth.signInWithOtp({
-                email,
-                options: { emailRedirectTo: window.location.href }
-            });
-            if (error) {
-                setStatus('Errore: ' + error.message, 'error');
-            } else {
-                setStatus('Controlla email');
-            }
-        });
-
-        document.getElementById('syncLogout').addEventListener('click', async () => {
-            await sb.auth.signOut();
-        });
-
-        // 5) check existing session + react to magic link callback
-        sb.auth.onAuthStateChange((event, session) => {
-            if (session) onLogin(session);
-            else onLogout();
-        });
-
-        sb.auth.getSession().then(({ data: { session } }) => {
-            if (session) onLogin(session);
-        });
-    </script>
 </body>
 </html>
