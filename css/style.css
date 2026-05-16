@@ -107,6 +107,7 @@ html, body {
     padding: 10px 16px;
     border-top: 1px solid var(--border);
 }
+.params-section > .param-row:first-child { border-top: none; }
 .param-icon {
     width: 30px; height: 30px;
     border-radius: 8px;
