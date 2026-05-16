@@ -126,9 +126,10 @@ html, body {
     display: flex; align-items: center; justify-content: center;
     font-size: 0.88em; margin-right: 12px; flex-shrink: 0;
 }
-.param-icon.purple { background: var(--purple-bg); }
-.param-icon.green  { background: var(--green-bg); }
-.param-icon.blue   { background: var(--blue-bg); }
+.param-icon.purple { color: var(--purple); }
+.param-icon.green  { color: var(--green); }
+.param-icon.blue   { color: var(--blue); }
+.param-icon svg { width: 15px; height: 15px; }
 
 .param-label { flex: 1; font-size: 0.87em; color: var(--muted); }
 .param-value { font-size: 0.9em; font-weight: 600; }
@@ -174,7 +175,8 @@ html, body {
     align-items: flex-start;
     gap: 12px;
 }
-.tip-icon { font-size: 1.1em; flex-shrink: 0; margin-top: 1px; }
+.tip-icon { font-size: 1.1em; flex-shrink: 0; margin-top: 1px; color: var(--gold); }
+.tip-icon svg { width: 18px; height: 18px; }
 .tip-text { font-size: 0.83em; color: var(--muted); line-height: 1.55; }
 
 /* ── BOTTOM NAV ── */
@@ -199,6 +201,7 @@ html, body {
     transition: color 0.15s;
 }
 .nav-icon { font-size: 1.55em; line-height: 1; }
+.nav-icon svg { width: 22px; height: 22px; }
 .nav-item.active.gold    { color: var(--gold); }
 .nav-item.active.purple  { color: var(--purple); }
 .nav-item.active.green   { color: var(--green); }
