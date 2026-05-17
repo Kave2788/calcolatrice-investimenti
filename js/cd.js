@@ -196,6 +196,7 @@ function calcCD() {
     const totalMonths = Math.max(1, Math.ceil(maxYears * 12));
     const labels = [];
     const data   = [];
+    const dataGross = [];   // serie lorda parallela, usata dal grafico Home per confronto omogeneo con TFR/PAC
     const yr0    = new Date().getFullYear();
     const today  = new Date();
 
@@ -204,21 +205,24 @@ function calcCD() {
         date.setMonth(date.getMonth() + m);
 
         let value = 0;
+        let valueGross = 0;
         for (const { b, r } of bondResults) {
             const start = new Date(b.start);
             const end   = new Date(b.end);
             if (date <= start) {
                 // non ancora iniziato → conta capitale se la data di inizio è nel passato/presente
-                if (start <= today) value += b.amount;
+                if (start <= today) { value += b.amount; valueGross += b.amount; }
             } else if (date >= end) {
-                value += r.netTotal;
+                value      += r.netTotal;
+                valueGross += b.amount + r.grossInterest;
             } else {
                 const elapsedDays = (date - start) / 86400000;
                 const elapsedYrs  = elapsedDays / 365.25;
                 const matured     = b.amount * (b.rate / 100) * elapsedYrs;
                 const matTax      = matured * CD_TAX_RATE;
                 const matBollo    = b.amount * CD_BOLLO_RATE * elapsedYrs;
-                value += b.amount + matured - matTax - matBollo;
+                value      += b.amount + matured - matTax - matBollo;
+                valueGross += b.amount + matured;
             }
         }
 
@@ -226,9 +230,10 @@ function calcCD() {
         const isYearEnd = m % 12 === 0;
         labels.push(isYearEnd ? (m === 0 ? 'Oggi' : yr0 + Math.floor(yearIdx)) : '');
         data.push(Math.round(value));
+        dataGross.push(Math.round(valueGross));
     }
 
-    RESULTS.cd = { net: totalNet, paid: totalDeposit, years: Math.ceil(maxYears), series: data };
+    RESULTS.cd = { net: totalNet, gross: totalGross, paid: totalDeposit, years: Math.ceil(maxYears), series: data, seriesGross: dataGross };
     setChart('cd', labels, data);
     updateBondNets();
 }
