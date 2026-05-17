@@ -45,10 +45,13 @@ function calcPension() {
     const capGain   = gn('pension-capgain');
     const infl      = 2.0;   // inflazione media ipotizzata per rivalutazione TFR di legge
 
-    const ral     = gn('s-ral');
-    const pctDip  = gn('s-emp-pct');
-    const pctAz   = gn('s-comp-pct');
-    const pctTFR  = gn('s-tfr-pct');
+    const ral        = gn('s-ral');
+    const pctDip     = gn('s-emp-pct');
+    const pctAz      = gn('s-comp-pct');
+    const pctTFR     = gn('s-tfr-pct');
+    const tfrMode    = $('s-tfr-mode').value;    // 'split' | 'fondoonly'
+    const initTFR    = gn('s-tfr-initial');      // saldo TFR già in azienda
+    const initFP     = gn('s-fp-initial');       // saldo già nel fondo
 
     // IRPEF calcolata in automatico dagli scaglioni vigenti
     const { marginale: irpefMarg, media: irpefMedia } = calcIrpef(ral);
@@ -59,8 +62,9 @@ function calcPension() {
     const quotaTFRAnno   = ral / TFR_DIVISOR;
     const contribDipAnno = ral * (pctDip / 100);
     const contribAzAnno  = ral * (pctAz  / 100);
-    const tfrAlFondoAnno = quotaTFRAnno * (pctTFR / 100);
-    const tfrInAziendaAnno = quotaTFRAnno - tfrAlFondoAnno;
+    // In modalità "solo fondo" tutto il TFR maturando va al fondo; in azienda si rivaluta solo il pregresso
+    const tfrAlFondoAnno   = tfrMode === 'fondoonly' ? quotaTFRAnno : quotaTFRAnno * (pctTFR / 100);
+    const tfrInAziendaAnno = tfrMode === 'fondoonly' ? 0            : quotaTFRAnno - tfrAlFondoAnno;
     const versatoFPAnno = contribDipAnno + contribAzAnno + tfrAlFondoAnno;
     const monthlyFP     = versatoFPAnno / 12;
 
@@ -71,9 +75,9 @@ function calcPension() {
 
     // ── Simulazione anno per anno ──
     const labels = [], dataFP = [], dataTFR = [];
-    let capFP    = 0;   // capitale fondo pensione
-    let capTFR   = 0;   // capitale TFR in azienda (già al netto del 17% sostitutivo)
-    let quoteTFRAccum = 0;  // somma delle quote accantonate (base imponibile IRPEF finale)
+    let capFP    = initFP;   // capitale fondo pensione (parte dal saldo iniziale)
+    let capTFR   = initTFR;  // capitale TFR in azienda (parte dal saldo iniziale)
+    let quoteTFRAccum = initTFR;  // base imponibile IRPEF finale (include il pregresso)
     const yr0    = new Date().getFullYear();
     const tfrRevalAnnua = TFR_REVAL_FIXED + TFR_REVAL_INFL * (infl / 100);
 
@@ -86,10 +90,11 @@ function calcPension() {
         // FP: capitalizza il pregresso, poi aggiungi versato annuo
         capFP = capFP * (1 + rateNet) + versatoFPAnno;
 
-        // TFR azienda: rivaluta pregresso, deduci 17% sostitutiva sulla rivalutazione, aggiungi quota annua
+        // TFR azienda: rivaluta pregresso, deduci 17% sostitutiva sulla rivalutazione
+        // In modalità "solo fondo" non si accantona più nuova quota annua
         const rev = capTFR * tfrRevalAnnua;
-        capTFR = capTFR + rev * (1 - TFR_REVAL_TAX) + quotaTFRAnno;
-        quoteTFRAccum += quotaTFRAnno;
+        capTFR = capTFR + rev * (1 - TFR_REVAL_TAX) + tfrInAziendaAnno;
+        quoteTFRAccum += tfrInAziendaAnno;
 
         const showLabel = y === years || (years > 10 ? y % 10 === 0 : y % 5 === 0);
         labels.push(showLabel ? (yr0 + y) : '');
@@ -101,7 +106,7 @@ function calcPension() {
     // I rendimenti sono già stati tassati durante l'accumulo (cap gain).
     // La tassazione "prestazione finale" si applica solo su contributi+TFR conferiti,
     // NON sui rendimenti.
-    const versatoFPTot = versatoFPAnno * years;
+    const versatoFPTot = initFP + versatoFPAnno * years;
     const prestRate    = prestazioneRate(years);
     const prestTax     = versatoFPTot * prestRate;
     const fpNet        = Math.max(0, capFP - prestTax);
@@ -120,10 +125,10 @@ function calcPension() {
     // ── Output DOM ──
     $('pension-result').textContent       = fmtK(fpNet);
     $('pension-label').textContent        = `Capitale netto finale stimato`;
-    $('d-pension-monthly').textContent    = fmtEur(monthlyFP);
-    $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
-    $('d-pension-yearly-dip').textContent  = fmtEur(contribDipAnno);
-    $('d-pension-yearly-az').textContent   = fmtEur(contribAzAnno);
+$('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
+    $('d-pension-yearly-fund-sub').textContent = `dip. ${fmtEur(contribDipAnno)} + az. ${fmtEur(contribAzAnno)} + TFR ${fmtEur(tfrAlFondoAnno)}`;
+    $('d-pension-yearly-dip').textContent  = fmtEur(contribDipAnno) + ' · anno';
+    $('d-pension-yearly-az').textContent   = fmtEur(contribAzAnno) + ' · anno';
     $('d-pension-prest').textContent      = (prestRate * 100).toFixed(1).replace('.0','') + '%';
     $('d-pension-prest-note').textContent = years <= 15
         ? `15% fino a 15 anni di adesione`

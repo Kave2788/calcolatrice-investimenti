@@ -158,6 +158,7 @@ html, body {
 .param-label-stack { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .param-label-stack .param-label { flex: none; }
 .param-sub { font-size: 0.74em; color: var(--muted); opacity: 0.7; }
+.param-sub.computed { color: var(--purple); opacity: 1; font-weight: 600; font-size: 0.78em; letter-spacing: 0.01em; }
 
 /* clickable param row (bonds opener) */
 .param-row.clickable { cursor: pointer; user-select: none; }
