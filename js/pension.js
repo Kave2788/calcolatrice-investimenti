@@ -8,6 +8,29 @@ const FP_PREST_HIGH   = 0.15;         // tassazione prestazione iniziale
 const FP_PREST_LOW    = 0.09;         // tassazione prestazione minima
 const FP_PREST_STEP   = 0.003;        // riduzione per ogni anno > 15
 
+// Scaglioni IRPEF 2024-2026 (riforma fiscale)
+const IRPEF_SCAGLIONI = [
+    { limit: 28000,    rate: 0.23 },
+    { limit: 50000,    rate: 0.35 },
+    { limit: Infinity, rate: 0.43 }
+];
+
+// Calcola IRPEF marginale (scaglione attivo) e media (effettiva) per una data RAL
+function calcIrpef(ral) {
+    if (ral <= 0) return { marginale: 0, media: 0 };
+    let tax = 0, prev = 0, marg = IRPEF_SCAGLIONI[0].rate;
+    for (const s of IRPEF_SCAGLIONI) {
+        if (ral > prev) {
+            const slice = Math.min(ral, s.limit) - prev;
+            tax += slice * s.rate;
+            marg = s.rate;
+        }
+        if (ral <= s.limit) break;
+        prev = s.limit;
+    }
+    return { marginale: marg, media: tax / ral };
+}
+
 // Aliquota prestazione FP: 15% per primi 15 anni, poi -0,3%/anno fino a 9% (35 anni)
 function prestazioneRate(years) {
     if (years <= 15) return FP_PREST_HIGH;
@@ -26,7 +49,11 @@ function calcPension() {
     const pctDip  = gn('s-emp-pct');
     const pctAz   = gn('s-comp-pct');
     const pctTFR  = gn('s-tfr-pct');
-    const irpef   = gn('s-irpef');
+
+    // IRPEF calcolata in automatico dagli scaglioni vigenti
+    const { marginale: irpefMarg, media: irpefMedia } = calcIrpef(ral);
+    $('d-irpef-marg').textContent  = (irpefMarg  * 100).toFixed(1).replace('.0','') + '%';
+    $('d-irpef-media').textContent = (irpefMedia * 100).toFixed(1).replace('.0','') + '%';
 
     // ── Quote annue (€) ──
     const quotaTFRAnno   = ral / TFR_DIVISOR;
@@ -82,13 +109,13 @@ function calcPension() {
     // ── Tassazione finale TFR in azienda ──
     // Aliquota media IRPEF degli ultimi 5 anni (semplificazione: usiamo IRPEF inserita).
     // Si applica SOLO sulle quote accantonate (non sulla rivalutazione, già tassata 17% annuo).
-    const tfrTax = quoteTFRAccum * (irpef / 100);
+    const tfrTax = quoteTFRAccum * irpefMedia;
     const tfrNet = Math.max(0, capTFR - tfrTax);
 
     // ── Risparmio fiscale annuo 730 ──
     // Contributo dipendente deducibile fino a 5.164,57 €/anno (NON azienda, NON TFR)
     const deducibile = Math.min(contribDipAnno, FP_DEDUC_CAP);
-    const savingAnno = deducibile * (irpef / 100);
+    const savingAnno = deducibile * irpefMarg;
 
     // ── Output DOM ──
     $('pension-result').textContent       = fmtK(fpNet);

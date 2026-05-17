@@ -130,14 +130,6 @@ html, body {
     text-transform: uppercase;
     letter-spacing: 0.6px;
 }
-.edit-btn {
-    font-size: 0.85em; font-weight: 600;
-    background: none; border: none; cursor: pointer; padding: 0;
-}
-.edit-btn.purple { color: var(--purple); }
-.edit-btn.green  { color: var(--green); }
-.edit-btn.blue   { color: var(--blue); }
-
 /* param display rows */
 .param-row {
     display: flex;
@@ -166,10 +158,6 @@ html, body {
 .param-label-stack { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .param-label-stack .param-label { flex: none; }
 .param-sub { font-size: 0.74em; color: var(--muted); opacity: 0.7; }
-
-/* edit grid */
-.edit-grid { display: none; flex-direction: column; }
-.edit-grid.open { display: flex; }
 
 /* clickable param row (bonds opener) */
 .param-row.clickable { cursor: pointer; user-select: none; }
@@ -315,26 +303,6 @@ html, body {
     font-size: 0.85em;
     padding: 12px 0;
 }
-
-.edit-row {
-    display: flex;
-    align-items: center;
-    padding: 10px 16px;
-    border-top: 1px solid var(--border);
-    gap: 10px;
-}
-.edit-row label { flex: 1; font-size: 0.83em; color: var(--muted); }
-.edit-row input {
-    width: 100px;
-    background: var(--card2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 0.9em;
-    padding: 6px 10px;
-    text-align: right;
-}
-.edit-row input:focus { outline: none; border-color: rgba(255,255,255,0.22); }
 
 /* ── TIP CARD ── */
 .tip-card {

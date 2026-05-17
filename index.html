@@ -36,26 +36,17 @@
         </div>
         <div class="param-row">
             <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">TFR</span>
-                <span class="param-sub" id="home-pension-sub">—</span>
-            </div>
+            <span class="param-label">TFR</span>
             <span class="param-value purple" id="home-pension-val">€ 0</span>
         </div>
         <div class="param-row">
             <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">PAC</span>
-                <span class="param-sub" id="home-pac-sub">—</span>
-            </div>
+            <span class="param-label">PAC</span>
             <span class="param-value green" id="home-pac-val">€ 0</span>
         </div>
         <div class="param-row">
             <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Conto Deposito</span>
-                <span class="param-sub" id="home-cd-sub">—</span>
-            </div>
+            <span class="param-label">Conto Deposito</span>
             <span class="param-value blue" id="home-cd-val">€ 0</span>
         </div>
     </div>
@@ -102,12 +93,21 @@
                 € <input type="number" id="s-ral" value="35000" min="0" step="500" class="inline-input wide" oninput="updateAll()">
             </span>
         </div>
-        <div class="param-row">
+        <div class="param-row computed">
             <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <span class="param-label">Aliquota IRPEF</span>
-            <span class="param-value">
-                <input type="number" id="s-irpef" value="23" min="0" step="0.5" class="inline-input" oninput="updateAll()">%
-            </span>
+            <div class="param-label-stack">
+                <span class="param-label">IRPEF marginale</span>
+                <span class="param-sub">deduzione 730 / scaglione attivo</span>
+            </div>
+            <span class="param-value purple" id="d-irpef-marg">23%</span>
+        </div>
+        <div class="param-row computed">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <div class="param-label-stack">
+                <span class="param-label">IRPEF media</span>
+                <span class="param-sub">tassazione TFR a liquidazione</span>
+            </div>
+            <span class="param-value purple" id="d-irpef-media">23%</span>
         </div>
     </div>
 
@@ -254,68 +254,78 @@
     </div>
 
     <div class="result-card green">
-        <div class="result-label" id="pac-label">Capitale stimato tra 20 anni</div>
+        <div class="result-label" id="pac-label">Capitale netto stimato</div>
         <div class="result-value" id="pac-result">€ 0</div>
         <div class="chart-wrap"><canvas id="pac-chart"></canvas></div>
     </div>
 
     <div class="params-section">
-        <div class="params-header">
-            <span class="params-title">I tuoi parametri</span>
-            <button class="edit-btn green" onclick="toggleEdit('pac')">Modifica</button>
+        <div class="section-header"><span>Investimento</span></div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span class="param-label">Investimento mensile</span>
+            <span class="param-value">
+                € <input type="number" id="pac-monthly" value="300" min="0" step="10" class="inline-input" oninput="updateAll()">
+            </span>
         </div>
-        <div id="pac-display">
-            <div class="param-row">
-                <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-                <span class="param-label">Investimento iniziale</span>
-                <span class="param-value" id="d-pac-initial">€ 5.000</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-                <span class="param-label">Investimento mensile</span>
-                <span class="param-value" id="d-pac-monthly">€ 300</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-                <span class="param-label">Orizzonte temporale</span>
-                <span class="param-value" id="d-pac-years">20 anni</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-                <span class="param-label">Rendimento medio annuo</span>
-                <span class="param-value" id="d-pac-rate">6,0%</span>
-            </div>
-            <div class="param-row">
-                <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
-                <span class="param-label">Inflazione media annua</span>
-                <span class="param-value" id="d-pac-inflation">2,0%</span>
-            </div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <span class="param-label">Orizzonte temporale</span>
+            <span class="param-value">
+                <input type="number" id="pac-years" value="20" min="1" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
+            </span>
         </div>
-        <div class="edit-grid" id="pac-edit">
-            <div class="edit-row">
-                <label>Investimento iniziale (€)</label>
-                <input type="number" id="pac-initial" value="5000" min="0" step="100" oninput="updateAll()">
+    </div>
+
+    <div class="params-section">
+        <div class="section-header"><span>Rendimento e fisco</span></div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <span class="param-label">Rendimento medio annuo</span>
+            <span class="param-value">
+                <input type="number" id="pac-rate" value="6.0" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
+            </span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
+            <div class="param-label-stack">
+                <span class="param-label">Costi ETF (TER)</span>
+                <span class="param-sub">tipicamente 0,10% – 0,50%</span>
             </div>
-            <div class="edit-row">
-                <label>Investimento mensile (€)</label>
-                <input type="number" id="pac-monthly" value="300" min="0" step="10" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Orizzonte temporale (anni)</label>
-                <input type="number" id="pac-years" value="20" min="1" max="50" step="1" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Rendimento annuo lordo (%)</label>
-                <input type="number" id="pac-rate" value="6.0" min="0" step="0.1" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Tassazione capital gain (%)</label>
-                <input type="number" id="pac-tax" value="26" min="0" step="0.5" oninput="updateAll()">
-            </div>
-            <div class="edit-row">
-                <label>Inflazione (%)</label>
-                <input type="number" id="pac-inflation" value="2.0" min="0" step="0.1" oninput="syncInflation('pac-inflation')">
-            </div>
+            <span class="param-value">
+                <input type="number" id="pac-ter" value="0.25" min="0" step="0.05" class="inline-input" oninput="updateAll()">%
+            </span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <span class="param-label">Tassazione capital gain</span>
+            <span class="param-value">
+                <input type="number" id="pac-tax" value="26" min="0" step="0.5" class="inline-input" oninput="updateAll()">%
+            </span>
+        </div>
+    </div>
+
+    <div class="params-section">
+        <div class="section-header"><span>Riepilogo</span></div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <span class="param-label">Totale versato</span>
+            <span class="param-value green" id="d-pac-paid">€ 0</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <span class="param-label">Guadagno lordo</span>
+            <span class="param-value green" id="d-pac-gain-gross">€ 0</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <span class="param-label">Tasse capital gain</span>
+            <span class="param-value green" id="d-pac-taxes">€ 0</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
+            <span class="param-label">Guadagno netto</span>
+            <span class="param-value green" id="d-pac-gain-net">€ 0</span>
         </div>
     </div>
 
@@ -373,8 +383,13 @@
         </div>
         <div class="param-row">
             <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <span class="param-label">Totale tasse</span>
-            <span class="param-value blue" id="d-cd-total-tax">€ 0</span>
+            <span class="param-label">Totale tasse annuo</span>
+            <span class="param-value blue" id="d-cd-tax-yearly">€ 0</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
+            <span class="param-label">Totale tasse a scadenza</span>
+            <span class="param-value blue" id="d-cd-tax-total">€ 0</span>
         </div>
     </div>
 

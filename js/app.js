@@ -11,35 +11,6 @@ function switchTab(tab) {
     $('nav-' + tab).classList.add('active', NAV_COLOR[tab]);
 }
 
-// ── EDIT TOGGLE ──
-const editOpen = {};
-
-function toggleEdit(key) {
-    editOpen[key] = !editOpen[key];
-    const grid    = $(key + '-edit');
-    const display = $(key + '-display');
-    const section = grid.closest('.params-section');
-    const btn     = section.querySelector('.edit-btn');
-    if (editOpen[key]) {
-        grid.classList.add('open');
-        display.style.display = 'none';
-        btn.textContent = 'Chiudi';
-    } else {
-        grid.classList.remove('open');
-        display.style.display = '';
-        btn.textContent = 'Modifica';
-    }
-}
-
-// ── INFLATION SYNC ──
-function syncInflation(sourceId) {
-    const v = gn(sourceId);
-    ['pac-inflation'].forEach(id => {
-        if ($(id) && id !== sourceId) $(id).value = v;
-    });
-    updateAll();
-}
-
 // ── ORCHESTRATORE ──
 function updateAll() {
     calcPension();

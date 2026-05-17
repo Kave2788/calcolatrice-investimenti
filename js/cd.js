@@ -147,25 +147,28 @@ function calcCD() {
     let totalGross   = 0;
     let totalGain    = 0;
     let totalTax     = 0;
-    let maxYears    = 0;
-    let yearlyGross = 0;
-    let yearlyNet   = 0;
+    let maxYears      = 0;
+    let totalGrossInt = 0;  // somma interessi lordi a scadenza (per media annua)
+    let sumYears      = 0;  // somma delle durate (denominatore media ponderata)
 
     const bondResults = BONDS.map(b => {
         const r = computeBond(b);
-        totalDeposit += b.amount;
-        totalGross   += b.amount + r.grossInterest;
-        totalNet     += r.netTotal;
-        totalGain    += r.netInterest;
-        totalTax     += r.tax + r.bollo;
-        // Interesse lordo e netto su base annua (rateo)
-        const yGross = b.amount * (b.rate / 100);
-        const yBollo = b.amount * CD_BOLLO_RATE;
-        yearlyGross += yGross;
-        yearlyNet   += yGross * (1 - CD_TAX_RATE) - yBollo;
+        totalDeposit  += b.amount;
+        totalGross    += b.amount + r.grossInterest;
+        totalNet      += r.netTotal;
+        totalGain     += r.netInterest;
+        totalTax      += r.tax + r.bollo;
+        totalGrossInt += r.grossInterest;
+        sumYears      += r.years;
         if (r.years > maxYears) maxYears = r.years;
         return { b, r };
     });
+
+    // Tutti gli "annui" usano media ponderata sulle durate dei vincoli
+    // (così la coerenza lordo − tasse = netto vale anche con vincoli sfalsati)
+    const yearlyGross = sumYears > 0 ? totalGrossInt / sumYears : 0;
+    const yearlyNet   = sumYears > 0 ? totalGain     / sumYears : 0;
+    const yearlyTax   = sumYears > 0 ? totalTax      / sumYears : 0;
 
     // Update riga readonly
     $('d-cd-total').textContent          = fmtEur(totalDeposit);
@@ -176,7 +179,8 @@ function calcCD() {
     $('d-cd-maturity-net').textContent   = fmtEur(totalNet);
     $('d-cd-yearly-gross').textContent   = fmtEur(yearlyGross);
     $('d-cd-yearly-net').textContent     = fmtEur(Math.max(0, yearlyNet));
-    $('d-cd-total-tax').textContent      = fmtEur(totalTax);
+    $('d-cd-tax-yearly').textContent     = fmtEur(yearlyTax);
+    $('d-cd-tax-total').textContent      = fmtEur(totalTax);
 
     // Card grande: totale netto a scadenza
     $('cd-label').textContent  = BONDS.length === 0
