@@ -48,8 +48,6 @@ function calcPension() {
     const ral        = gn('s-ral');
     const pctDip     = gn('s-emp-pct');
     const pctAz      = gn('s-comp-pct');
-    const pctTFR     = gn('s-tfr-pct');
-    const tfrMode    = $('s-tfr-mode').value;    // 'split' | 'fondoonly'
     const initTFR    = gn('s-tfr-initial');      // saldo TFR già in azienda
     const initFP     = gn('s-fp-initial');       // saldo già nel fondo
 
@@ -59,12 +57,12 @@ function calcPension() {
     $('d-irpef-media').textContent = (irpefMedia * 100).toFixed(1).replace('.0','') + '%';
 
     // ── Quote annue (€) ──
-    const quotaTFRAnno   = ral / TFR_DIVISOR;
-    const contribDipAnno = ral * (pctDip / 100);
-    const contribAzAnno  = ral * (pctAz  / 100);
-    // In modalità "solo fondo" tutto il TFR maturando va al fondo; in azienda si rivaluta solo il pregresso
-    const tfrAlFondoAnno   = tfrMode === 'fondoonly' ? quotaTFRAnno : quotaTFRAnno * (pctTFR / 100);
-    const tfrInAziendaAnno = tfrMode === 'fondoonly' ? 0            : quotaTFRAnno - tfrAlFondoAnno;
+    // Con fondo pensione attivo, per legge il TFR va tutto al fondo; in azienda si rivaluta solo il pregresso
+    const quotaTFRAnno     = ral / TFR_DIVISOR;
+    const contribDipAnno   = ral * (pctDip / 100);
+    const contribAzAnno    = ral * (pctAz  / 100);
+    const tfrAlFondoAnno   = quotaTFRAnno;
+    const tfrInAziendaAnno = 0;
     const versatoFPAnno = contribDipAnno + contribAzAnno + tfrAlFondoAnno;
     const monthlyFP     = versatoFPAnno / 12;
 
