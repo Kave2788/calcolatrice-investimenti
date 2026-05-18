@@ -9,22 +9,24 @@ function calcPAC() {
     const rateM   = (rateNet / 100) / 12;
     const yr0     = new Date().getFullYear();
 
+    const initial = gn('pac-initial');
+
     const labels = [], data = [];
-    let capital = 0;
+    let capital = initial;
 
     labels.push('Oggi');
-    data.push(0);
+    data.push(Math.round(capital));
 
     for (let y = 1; y <= years; y++) {
         for (let m = 0; m < 12; m++) {
             capital = capital * (1 + rateM) + monthly;
-        }
+}
         const showLabel = y === years || (years > 10 ? y % 10 === 0 : y % 5 === 0);
         labels.push(showLabel ? (yr0 + y) : '');
         data.push(Math.round(capital));
     }
 
-    const totalPaid = monthly * 12 * years;
+    const totalPaid = initial + monthly * 12 * years;
     const gainGross = Math.max(0, capital - totalPaid);
     const taxes     = gainGross * (taxRate / 100);
     const net       = capital - taxes;
