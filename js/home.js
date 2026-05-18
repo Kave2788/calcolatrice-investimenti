@@ -34,5 +34,4 @@ function calcHome() {
         dataCD.push(sampleCd(y));
     }
 
-    setChartMulti('home', labels, [dataTFR, dataPAC, dataCD]);
 }

@@ -234,6 +234,5 @@ function calcCD() {
     }
 
     RESULTS.cd = { net: totalNet, gross: totalGross, paid: totalDeposit, years: Math.ceil(maxYears), series: data, seriesGross: dataGross };
-    setChart('cd', labels, data);
     updateBondNets();
 }

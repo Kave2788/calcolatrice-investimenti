@@ -120,8 +120,10 @@ function calcPension() {
     const deducibile = Math.min(contribDipAnno, FP_DEDUC_CAP);
     const savingAnno = deducibile * irpefMarg;
 
+    // ── Totale TFR (fondo + quota rimasta in azienda, capitali separati e addizionali) ──
+    const totalNet = fpNet + tfrNet;
+
     // ── Output DOM ──
-    $('pension-result').textContent       = fmtK(fpNet);
     $('pension-label').textContent        = `Capitale netto finale stimato`;
 $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
     $('d-pension-yearly-fund-sub').textContent = `dip. ${fmtEur(contribDipAnno)} + az. ${fmtEur(contribAzAnno)} + TFR ${fmtEur(tfrAlFondoAnno)}`;
@@ -132,21 +134,9 @@ $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
         ? `15% fino a 15 anni di adesione`
         : `15% − 0,3% per ogni anno oltre 15 (min 9%)`;
 
-    // Confronto FP vs TFR azienda
+    // Dettaglio breakdown TFR: due capitali separati e addizionali
     $('pension-tfr-net').textContent = fmtK(tfrNet);
     $('pension-fp-net').textContent  = fmtK(fpNet);
-    const delta = fpNet - tfrNet;
-    const deltaEl = $('pension-delta');
-    if (Math.abs(delta) < 1) {
-        deltaEl.textContent = 'Le due strategie sono equivalenti';
-        deltaEl.style.color = 'var(--muted)';
-    } else if (delta > 0) {
-        deltaEl.textContent = `+${fmtK(delta)} con il fondo pensione`;
-        deltaEl.style.color = 'var(--purple)';
-    } else {
-        deltaEl.textContent = `+${fmtK(-delta)} lasciando in azienda`;
-        deltaEl.style.color = 'var(--muted)';
-    }
 
     // Risparmio fiscale 730
     const savingTot = savingAnno * years;
@@ -166,6 +156,10 @@ $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
         ? `Con questi parametri potresti avere un reddito aggiuntivo di circa ${fmtEur(monthlyIncome)} al mese per i primi 20 anni di pensione.`
         : 'Inserisci i tuoi parametri per scoprire il tuo futuro finanziario.';
 
-    RESULTS.pension = { net: fpNet, paid: versatoFPTot, years, series: dataFP };
-    setChart('pension', labels, dataFP);
+    $('pension-result').textContent = fmtK(totalNet);
+
+    // Serie combinata per il grafico Home (FP + TFR azienda anno per anno)
+    const seriesCombined = dataFP.map((v, i) => v + (dataTFR[i] || 0));
+
+    RESULTS.pension = { net: totalNet, paid: versatoFPTot, years, series: seriesCombined };
 }

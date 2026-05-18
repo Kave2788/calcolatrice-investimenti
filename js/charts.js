@@ -65,8 +65,4 @@ function setChartMulti(key, labels, dataArrays) {
 
 function initCharts() {
     // Home: 3 linee sovrapposte (TFR viola, PAC verde, CD blu), scala lineare con minimo dinamico
-    charts.home    = mkChartMulti('home-chart', ['#A78BFA', '#34D399', '#60A5FA'], { dynamicY: true });
-    charts.pension = mkChart('pension-chart', '#A78BFA', 'rgba(167,139,250,0.13)');
-    charts.pac     = mkChart('pac-chart',     '#34D399', 'rgba(52,211,153,0.13)');
-    charts.cd      = mkChart('cd-chart',      '#60A5FA', 'rgba(96,165,250,0.13)');
 }

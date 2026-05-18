@@ -42,5 +42,4 @@ function calcPAC() {
         : 'Con un piccolo investimento costante, il tempo è il tuo miglior alleato.';
 
     RESULTS.pac = { net, paid: totalPaid, years, series: data };
-    setChart('pac', labels, data);
 }
