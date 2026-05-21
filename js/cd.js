@@ -129,13 +129,14 @@ function renderBonds() {
             </div>
             <div class="bond-row">
                 <label>Tasso lordo (%)</label>
-                <input type="number" min="0" step="0.05" value="${b.rate}"
+                <input type="number" min="0" max="30" step="0.05" value="${b.rate}"
                     oninput="updateBond(${b.id}, 'rate', this.value)">
             </div>
+            ${r.years <= 0 ? `<div class="bond-warning">⚠ Data scadenza precedente alla data inizio</div>` : `
             <div class="bond-net">
                 <span class="bond-net-label">Netto a scadenza (${r.years.toFixed(1)} anni)</span>
                 <span class="bond-net-value">${fmtEur(r.netTotal)}</span>
-            </div>
+            </div>`}
         </div>`;
     }).join('');
 }

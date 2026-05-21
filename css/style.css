@@ -283,6 +283,7 @@ html, body {
 }
 .bond-net-label { color: var(--muted); }
 .bond-net-value { color: var(--blue); font-weight: 700; }
+.bond-warning { color: #F59E0B; font-size: .8rem; padding: 6px 0 2px; }
 
 .bond-add-btn {
     width: 100%;
