@@ -69,18 +69,12 @@ function restoreFundSelector() {
     }
 }
 
-// ── DEFAULTS ──
-const DEFAULTS = {
-    pension: {
-        's-tfr-initial': 0, 's-fp-initial': 0, 's-fp-years-pre': 0, 's-work-years-pre': 0,
-        'pension-years': 37, 's-ral': 35000, 's-inflation': 2,
-        's-emp-pct': 1, 's-comp-pct': 1,
-        'pension-rate': 4.5, 'pension-costs': 1.0, 'pension-capgain': 20
-    },
-    pac: {
-        'pac-initial': 0, 'pac-monthly': 300, 'pac-years': 20,
-        'pac-rate': 6.0, 'pac-ter': 0.25, 'pac-tax': 26
-    }
+// ── VIEW INPUTS MAP ──
+const VIEW_INPUTS = {
+    pension: ['s-tfr-initial','s-fp-initial','s-fp-years-pre','s-work-years-pre',
+              'pension-years','s-ral','s-inflation','s-emp-pct','s-comp-pct',
+              'pension-rate','pension-costs','pension-capgain'],
+    pac:     ['pac-initial','pac-monthly','pac-years','pac-rate','pac-ter','pac-tax']
 };
 
 function resetTab(tab, btn) {
@@ -93,10 +87,9 @@ function resetTab(tab, btn) {
         saveBonds();
         renderBonds();
     } else {
-        const defs = DEFAULTS[tab] || {};
-        Object.entries(defs).forEach(([id, val]) => {
+        (VIEW_INPUTS[tab] || []).forEach(id => {
             const el = $(id);
-            if (el) el.value = val;
+            if (el) el.value = '';
         });
         if (tab === 'pension') {
             $('s-fund-type').value = 'custom';
