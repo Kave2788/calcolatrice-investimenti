@@ -106,6 +106,7 @@ function resetTab(tab, btn) {
         }
     }
     saveState();
+    saveToCloud();
     updateAll();
 }
 
