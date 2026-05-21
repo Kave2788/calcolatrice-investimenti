@@ -98,6 +98,16 @@
                 € <input type="number" id="s-fp-initial" value="0" min="0" step="500" class="inline-input wide" oninput="updateAll()">
             </span>
         </div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="param-label-stack">
+                <span class="param-label">Anni già nel fondo</span>
+                <span class="param-sub">per calcolo aliquota prestazione</span>
+            </div>
+            <span class="param-value">
+                <input type="number" id="s-fp-years-pre" value="0" min="0" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
+            </span>
+        </div>
     </div>
 
     <div class="params-section">
@@ -131,6 +141,16 @@
                 <span class="param-sub">tassazione TFR a liquidazione</span>
             </div>
             <span class="param-value purple" id="d-irpef-media">23%</span>
+        </div>
+        <div class="param-row">
+            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="param-label-stack">
+                <span class="param-label">Inflazione media attesa</span>
+                <span class="param-sub">rivalutazione TFR = 1,5% + 75% × inflazione</span>
+            </div>
+            <span class="param-value">
+                <input type="number" id="s-inflation" value="2" min="0" max="10" step="0.5" class="inline-input" oninput="updateAll()"> %
+            </span>
         </div>
     </div>
 

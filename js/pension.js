@@ -43,13 +43,14 @@ function calcPension() {
     const rateGross = gn('pension-rate');
     const costs     = gn('pension-costs');
     const capGain   = gn('pension-capgain');
-    const infl      = 2.0;   // inflazione media ipotizzata per rivalutazione TFR di legge
+    const infl      = gn('s-inflation') || 2.0;
 
     const ral        = gn('s-ral');
     const pctDip     = gn('s-emp-pct');
     const pctAz      = gn('s-comp-pct');
-    const initTFR    = gn('s-tfr-initial');      // saldo TFR già in azienda
-    const initFP     = gn('s-fp-initial');       // saldo già nel fondo
+    const initTFR     = gn('s-tfr-initial');      // saldo TFR già in azienda
+    const initFP      = gn('s-fp-initial');       // saldo già nel fondo
+    const fpYearsPre  = gi('s-fp-years-pre');     // anni già trascorsi nel fondo (per aliquota prestazione)
 
     // IRPEF calcolata in automatico dagli scaglioni vigenti
     const { marginale: irpefMarg, media: irpefMedia } = calcIrpef(ral);
@@ -85,8 +86,8 @@ function calcPension() {
     dataTFR.push(0);
 
     for (let y = 1; y <= years; y++) {
-        // FP: capitalizza il pregresso, poi aggiungi versato annuo
-        capFP = capFP * (1 + rateNet) + versatoFPAnno;
+        // FP: mid-year convention (versamenti distribuiti durante l'anno)
+        capFP = (capFP + versatoFPAnno / 2) * (1 + rateNet) + versatoFPAnno / 2;
 
         // TFR azienda: rivaluta pregresso, deduci 17% sostitutiva sulla rivalutazione
         // In modalità "solo fondo" non si accantona più nuova quota annua
@@ -103,16 +104,24 @@ function calcPension() {
     // ── Tassazione finale FP ──
     // I rendimenti sono già stati tassati durante l'accumulo (cap gain).
     // La tassazione "prestazione finale" si applica solo su contributi+TFR conferiti,
-    // NON sui rendimenti.
-    const versatoFPTot = initFP + versatoFPAnno * years;
-    const prestRate    = prestazioneRate(years);
-    const prestTax     = versatoFPTot * prestRate;
-    const fpNet        = Math.max(0, capFP - prestTax);
+    // NON sui rendimenti. L'aliquota considera gli anni totali di iscrizione al fondo
+    // (pregressi + simulazione), così il saldo iniziale non viene sovratassato.
+    const versatoFPTot  = versatoFPAnno * years;
+    const totalFPYears  = fpYearsPre + years;
+    const prestRate     = prestazioneRate(totalFPYears);
+    const prestTax      = versatoFPTot * prestRate;
+    const fpNet         = Math.max(0, capFP - prestTax);
 
-    // ── Tassazione finale TFR in azienda ──
-    // Aliquota media IRPEF degli ultimi 5 anni (semplificazione: usiamo IRPEF inserita).
-    // Si applica SOLO sulle quote accantonate (non sulla rivalutazione, già tassata 17% annuo).
-    const tfrTax = quoteTFRAccum * irpefMedia;
+    // ── Tassazione finale TFR in azienda (tassazione separata) ──
+    // La "retribuzione di riferimento" per la tassazione separata è:
+    //   rif = (TFR_totale_accantonato / anni_totali_lavoro) * 12
+    // Gli anni totali includono sia quelli futuri simulati sia quelli pregressi
+    // che hanno generato initTFR (stimati dalla quota annua corrente).
+    const anniPregressiTFR = quotaTFRAnno > 0 ? Math.round(initTFR / quotaTFRAnno) : 0;
+    const anniTotaliTFR    = Math.max(1, anniPregressiTFR + years);
+    const retribizioneRif  = (quoteTFRAccum / anniTotaliTFR) * 12;
+    const { media: irpefSeparatoria } = calcIrpef(retribizioneRif);
+    const tfrTax = quoteTFRAccum * irpefSeparatoria;
     const tfrNet = Math.max(0, capTFR - tfrTax);
 
     // ── Risparmio fiscale annuo 730 ──
@@ -130,9 +139,9 @@ $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
     $('d-pension-yearly-dip').textContent  = fmtEur(contribDipAnno) + ' · anno';
     $('d-pension-yearly-az').textContent   = fmtEur(contribAzAnno) + ' · anno';
     $('d-pension-prest').textContent      = (prestRate * 100).toFixed(1).replace('.0','') + '%';
-    $('d-pension-prest-note').textContent = years <= 15
-        ? `15% fino a 15 anni di adesione`
-        : `15% − 0,3% per ogni anno oltre 15 (min 9%)`;
+    $('d-pension-prest-note').textContent = totalFPYears <= 15
+        ? `15% fino a 15 anni totali di adesione`
+        : `15% − 0,3% per ogni anno oltre 15 (min 9%) · ${totalFPYears} anni totali`;
 
     // Dettaglio breakdown TFR: due capitali separati e addizionali
     $('pension-tfr-net').textContent = fmtK(tfrNet);
