@@ -50,7 +50,8 @@ function calcPension() {
     const pctAz      = gn('s-comp-pct');
     const initTFR     = gn('s-tfr-initial');      // saldo TFR già in azienda
     const initFP      = gn('s-fp-initial');       // saldo già nel fondo
-    const fpYearsPre  = gi('s-fp-years-pre');     // anni già trascorsi nel fondo (per aliquota prestazione)
+    const fpYearsPre     = gi('s-fp-years-pre');     // anni già nel fondo (per aliquota prestazione)
+    const workYearsPre   = gi('s-work-years-pre');   // anni già lavorati (per tassazione separata TFR)
 
     // IRPEF calcolata in automatico dagli scaglioni vigenti
     const { marginale: irpefMarg, media: irpefMedia } = calcIrpef(ral);
@@ -117,7 +118,7 @@ function calcPension() {
     //   rif = (TFR_totale_accantonato / anni_totali_lavoro) * 12
     // Gli anni totali includono sia quelli futuri simulati sia quelli pregressi
     // che hanno generato initTFR (stimati dalla quota annua corrente).
-    const anniPregressiTFR = quotaTFRAnno > 0 ? Math.round(initTFR / quotaTFRAnno) : 0;
+    const anniPregressiTFR = workYearsPre > 0 ? workYearsPre : (quotaTFRAnno > 0 ? Math.round(initTFR / quotaTFRAnno) : 0);
     const anniTotaliTFR    = Math.max(1, anniPregressiTFR + years);
     const retribizioneRif  = (quoteTFRAccum / anniTotaliTFR) * 12;
     const { media: irpefSeparatoria } = calcIrpef(retribizioneRif);

@@ -19,9 +19,16 @@ function _updateAuthUI(user) {
     const el = $('auth-status');
     if (!el) return;
     if (user) {
-        el.innerHTML = `<span class="auth-email">${user.email}</span><button class="auth-signout" onclick="authSignOut()">Esci</button>`;
+        el.innerHTML = `
+            <span class="auth-email">${user.email}</span>
+            <button class="auth-icon-btn logged-in" onclick="showAuthModal()" title="Account">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>`;
     } else {
-        el.innerHTML = `<button class="auth-login" onclick="showAuthModal()">Accedi / Registrati</button>`;
+        el.innerHTML = `
+            <button class="auth-icon-btn" onclick="showAuthModal()" title="Accedi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>`;
     }
 }
 
@@ -85,9 +92,30 @@ function _showSyncBadge(msg) {
 }
 
 // ── MODAL ──
-function showAuthModal() {
+async function showAuthModal() {
+    const { data: { user } } = await _sb.auth.getUser();
+    if (user) {
+        $('auth-modal-content').innerHTML = `
+            <button class="auth-close" onclick="hideAuthModal()">✕</button>
+            <h2 class="auth-title">Account</h2>
+            <p class="auth-sub" style="word-break:break-all">${user.email}</p>
+            <p class="auth-sub">I tuoi parametri vengono salvati automaticamente.</p>
+            <button class="auth-btn-primary" style="width:100%;margin-top:8px" onclick="authSignOut();hideAuthModal()">Esci</button>`;
+    } else {
+        $('auth-modal-content').innerHTML = `
+            <button class="auth-close" onclick="hideAuthModal()">✕</button>
+            <h2 class="auth-title">Il tuo account</h2>
+            <p class="auth-sub">Accedi per salvare i parametri su qualsiasi dispositivo.</p>
+            <input id="auth-email"    type="email"    placeholder="Email"    class="auth-input">
+            <input id="auth-password" type="password" placeholder="Password" class="auth-input">
+            <div id="auth-error" class="auth-error"></div>
+            <div class="auth-actions">
+                <button class="auth-btn-primary"   onclick="submitAuth('signin')">Accedi</button>
+                <button class="auth-btn-secondary" onclick="submitAuth('signup')">Registrati</button>
+            </div>`;
+        setTimeout(() => $('auth-email')?.focus(), 50);
+    }
     $('auth-modal').style.display = 'flex';
-    $('auth-email').focus();
 }
 
 function hideAuthModal() {
@@ -96,12 +124,12 @@ function hideAuthModal() {
 }
 
 async function submitAuth(mode) {
-    const email    = $('auth-email').value.trim();
-    const password = $('auth-password').value;
+    const email    = $('auth-email')?.value.trim();
+    const password = $('auth-password')?.value;
     const errEl    = $('auth-error');
-    errEl.textContent = '';
+    if (errEl) errEl.textContent = '';
 
-    if (!email || !password) { errEl.textContent = 'Inserisci email e password.'; return; }
+    if (!email || !password) { if (errEl) errEl.textContent = 'Inserisci email e password.'; return; }
 
     try {
         if (mode === 'signin') {

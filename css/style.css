@@ -29,7 +29,7 @@ html, body {
 .view {
     display: none;
     position: fixed;
-    top: 44px;
+    top: 0;
     left: 0;
     right: 0;
     bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
@@ -416,33 +416,25 @@ html, body {
 }
 .settings-info p:last-child { margin-bottom: 0; }
 
-/* ── AUTH BAR ── */
-#auth-bar {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 44px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 0 16px;
-    z-index: 100;
-}
-.auth-login {
-    font-size: .78rem;
-    color: var(--secondary);
-    background: none;
-    border: 1px solid var(--secondary);
-    border-radius: 6px;
-    padding: 4px 10px;
+/* ── AUTH ICON ── */
+.auth-icon-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
 }
+.auth-icon-btn svg { width: 16px; height: 16px; }
+.auth-icon-btn.logged-in { border-color: #10B981; color: #10B981; }
 .auth-email {
-    font-size: .78rem;
+    font-size: .75rem;
     color: var(--muted);
-    margin-right: 6px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .auth-signout {
     font-size: .75rem;
@@ -451,7 +443,9 @@ html, body {
     border: none;
     cursor: pointer;
     text-decoration: underline;
+    white-space: nowrap;
 }
+#auth-status { display: flex; align-items: center; gap: 8px; }
 #sync-badge {
     font-size: .72rem;
     color: #10B981;

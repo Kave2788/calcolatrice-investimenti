@@ -19,32 +19,21 @@
 </head>
 <body>
 
-<!-- ── AUTH BAR ── -->
-<div id="auth-bar">
-    <div id="auth-status"><button class="auth-login" onclick="showAuthModal()">Accedi / Registrati</button></div>
-    <span id="sync-badge"></span>
-</div>
-
-<!-- ── AUTH MODAL ── -->
+<!-- ── AUTH MODAL ──-->
 <div id="auth-modal" style="display:none">
-    <div class="auth-card">
-        <button class="auth-close" onclick="hideAuthModal()">✕</button>
-        <h2 class="auth-title">Il tuo account</h2>
-        <p class="auth-sub">Accedi per salvare i parametri e ritrovarli su qualsiasi dispositivo.</p>
-        <input id="auth-email"    type="email"    placeholder="Email"    class="auth-input">
-        <input id="auth-password" type="password" placeholder="Password" class="auth-input">
-        <div id="auth-error" class="auth-error"></div>
-        <div class="auth-actions">
-            <button class="auth-btn-primary" onclick="submitAuth('signin')">Accedi</button>
-            <button class="auth-btn-secondary" onclick="submitAuth('signup')">Registrati</button>
-        </div>
-    </div>
+    <div class="auth-card" id="auth-modal-content"></div>
 </div>
 
 <!-- ════════════════════ HOME ════════════════════ -->
 <div id="view-home" class="view active">
     <div class="view-header">
         <h1>Riepilogo</h1>
+        <div id="auth-status">
+            <button class="auth-icon-btn" onclick="showAuthModal()" title="Accedi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>
+        </div>
+        <span id="sync-badge"></span>
     </div>
 
     <div class="result-card compact" style="text-align:center">
