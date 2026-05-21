@@ -54,6 +54,25 @@ html, body {
     padding: 24px 20px 16px;
 }
 .view-header h1 { font-size: 1.55em; font-weight: 700; }
+.reset-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: color 0.18s, border-color 0.18s, background 0.18s;
+    flex-shrink: 0;
+}
+.reset-btn svg { width: 15px; height: 15px; }
+.reset-btn:hover { background: var(--card2); }
+.reset-btn.purple:hover { color: var(--purple); border-color: var(--purple); }
+.reset-btn.green:hover  { color: var(--green);  border-color: var(--green); }
+.reset-btn.blue:hover   { color: var(--blue);   border-color: var(--blue); }
+.reset-btn:active { opacity: 0.7; }
+.reset-btn.spinning svg { animation: spin-once 0.4s ease; }
+@keyframes spin-once { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
 
 /* ── RESULT CARD ── */
 .result-card {
