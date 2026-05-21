@@ -79,6 +79,7 @@ window.addEventListener('DOMContentLoaded', () => {
     restoreFundSelector();
     updateAll();
 
-    document.addEventListener('input', saveState);
-    document.addEventListener('change', saveState);
+    document.addEventListener('input', () => { saveState(); saveToCloud(); });
+    document.addEventListener('change', () => { saveState(); saveToCloud(); });
+    authInit();
 });
