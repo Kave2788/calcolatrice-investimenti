@@ -792,13 +792,16 @@ function populateComparti(tipo, fundName) {
     });
 }
 
-function applyISC(tipo, fundName, idx) {
+// setInputs=false in fase di restore: mostra l'ISC senza sovrascrivere i valori salvati dall'utente
+function applyISC(tipo, fundName, idx, setInputs = true) {
     const info = $('s-isc-info');
     if (!tipo || !fundName || idx === '') { info.style.display = 'none'; return; }
-    const comp = COVIP_ISC[tipo][fundName][idx];
+    const comp = COVIP_ISC[tipo]?.[fundName]?.[idx];
     if (!comp) return;
-    $('pension-costs').value = comp.i35;
-    if (RENDIMENTI_DEFAULT[comp.k] !== undefined) $('pension-rate').value = RENDIMENTI_DEFAULT[comp.k];
+    if (setInputs) {
+        $('pension-costs').value = comp.i35;
+        if (RENDIMENTI_DEFAULT[comp.k] !== undefined) $('pension-rate').value = RENDIMENTI_DEFAULT[comp.k];
+    }
     const catLabel = { GAR:'Garantito', OBB:'Obbligazionario', BIL:'Bilanciato', AZN:'Azionario' };
     $('s-isc-2').textContent  = comp.i2  + '%';
     $('s-isc-5').textContent  = comp.i5  + '%';

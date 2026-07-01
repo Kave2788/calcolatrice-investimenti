@@ -46,10 +46,15 @@ function restoreInputs() {
     });
 }
 
-function restoreFundSelector() {
-    const state = loadState();
+function restoreFundSelector(state = loadState()) {
     const tipo = state['s-fund-type'];
-    if (!tipo || tipo === 'custom') return;
+    if (!tipo || tipo === 'custom') {
+        $('s-fund-type').value = 'custom';
+        $('s-fund-name-row').style.display = 'none';
+        $('s-fund-comparto-row').style.display = 'none';
+        $('s-isc-info').style.display = 'none';
+        return;
+    }
 
     $('s-fund-type').value = tipo;
     populateFundNames(tipo);
@@ -65,7 +70,8 @@ function restoreFundSelector() {
     const compIdx = state['s-fund-comparto'];
     if (compIdx !== undefined && compIdx !== '') {
         $('s-fund-comparto').value = compIdx;
-        applyISC(tipo, fundName, parseInt(compIdx));
+        // setInputs=false: mostra l'ISC ma non sovrascrive rendimento/costi salvati
+        applyISC(tipo, fundName, parseInt(compIdx), false);
     }
 }
 
@@ -108,7 +114,6 @@ window.addEventListener('DOMContentLoaded', () => {
     restoreInputs();
     loadBonds();
     renderBonds();
-    initCharts();
     initFundSelector();
     restoreFundSelector();
     updateAll();

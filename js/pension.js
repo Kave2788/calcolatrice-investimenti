@@ -74,17 +74,10 @@ function calcPension() {
     const rateNet        = rateAfterCosts * (1 - capGain / 100);
 
     // ── Simulazione anno per anno ──
-    const labels = [], dataFP = [], dataTFR = [];
     let capFP    = initFP;   // capitale fondo pensione (parte dal saldo iniziale)
     let capTFR   = initTFR;  // capitale TFR in azienda (parte dal saldo iniziale)
     let quoteTFRAccum = initTFR;  // base imponibile IRPEF finale (include il pregresso)
-    const yr0    = new Date().getFullYear();
     const tfrRevalAnnua = TFR_REVAL_FIXED + TFR_REVAL_INFL * (infl / 100);
-
-    // Push valore iniziale (anno 0)
-    labels.push('Oggi');
-    dataFP.push(0);
-    dataTFR.push(0);
 
     for (let y = 1; y <= years; y++) {
         // FP: mid-year convention (versamenti distribuiti durante l'anno)
@@ -95,11 +88,6 @@ function calcPension() {
         const rev = capTFR * tfrRevalAnnua;
         capTFR = capTFR + rev * (1 - TFR_REVAL_TAX) + tfrInAziendaAnno;
         quoteTFRAccum += tfrInAziendaAnno;
-
-        const showLabel = y === years || (years > 10 ? y % 10 === 0 : y % 5 === 0);
-        labels.push(showLabel ? (yr0 + y) : '');
-        dataFP.push(Math.round(capFP));
-        dataTFR.push(Math.round(capTFR));
     }
 
     // ── Tassazione finale FP ──
@@ -134,8 +122,7 @@ function calcPension() {
     const totalNet = fpNet + tfrNet;
 
     // ── Output DOM ──
-    $('pension-label').textContent        = `Capitale netto finale stimato`;
-$('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
+    $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
     $('d-pension-yearly-fund-sub').textContent = `dip. ${fmtEur(contribDipAnno)} + az. ${fmtEur(contribAzAnno)} + TFR ${fmtEur(tfrAlFondoAnno)}`;
     $('d-pension-yearly-dip').textContent  = fmtEur(contribDipAnno) + ' · anno';
     $('d-pension-yearly-az').textContent   = fmtEur(contribAzAnno) + ' · anno';
@@ -168,8 +155,5 @@ $('d-pension-yearly-fund').textContent = fmtEur(versatoFPAnno);
 
     $('pension-result').textContent = fmtK(totalNet);
 
-    // Serie combinata per il grafico Home (FP + TFR azienda anno per anno)
-    const seriesCombined = dataFP.map((v, i) => v + (dataTFR[i] || 0));
-
-    RESULTS.pension = { net: totalNet, paid: versatoFPTot, years, series: seriesCombined };
+    RESULTS.pension = { net: totalNet, paid: versatoFPTot, years };
 }

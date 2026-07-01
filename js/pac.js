@@ -7,23 +7,11 @@ function calcPAC() {
     // Rendimento netto dei costi ETF (TER deducibile annualmente, qui mensilizzato)
     const rateNet = Math.max(0, rate - ter);
     const rateM   = (rateNet / 100) / 12;
-    const yr0     = new Date().getFullYear();
-
     const initial = gn('pac-initial');
 
-    const labels = [], data = [];
     let capital = initial;
-
-    labels.push('Oggi');
-    data.push(Math.round(capital));
-
-    for (let y = 1; y <= years; y++) {
-        for (let m = 0; m < 12; m++) {
-            capital = capital * (1 + rateM) + monthly;
-}
-        const showLabel = y === years || (years > 10 ? y % 10 === 0 : y % 5 === 0);
-        labels.push(showLabel ? (yr0 + y) : '');
-        data.push(Math.round(capital));
+    for (let m = 0; m < years * 12; m++) {
+        capital = capital * (1 + rateM) + monthly;
     }
 
     const totalPaid = initial + monthly * 12 * years;
@@ -32,7 +20,6 @@ function calcPAC() {
     const net       = capital - taxes;
     const gainNet   = Math.max(0, net - totalPaid);
 
-    $('pac-label').textContent     = `Capitale netto stimato`;
     $('pac-result').textContent    = fmtK(net);
     $('d-pac-paid').textContent       = fmtEur(totalPaid);
     $('d-pac-gain-gross').textContent = fmtEur(gainGross);
@@ -43,5 +30,5 @@ function calcPAC() {
         ? `Stai trasformando ${fmtEur(totalPaid)} in ${fmtK(net)}, guadagnando ${fmtK(gainNet)} netti in ${years} anni.`
         : 'Con un piccolo investimento costante, il tempo è il tuo miglior alleato.';
 
-    RESULTS.pac = { net, paid: totalPaid, years, series: data };
+    RESULTS.pac = { net, paid: totalPaid, years };
 }

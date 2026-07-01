@@ -1,100 +1,69 @@
 # 💰 Calcolatrice Investimenti
 
-Calcolatrice fintech in HTML/CSS/JS single-file per confrontare quattro strategie d'investimento: **TFR senza fondo**, **TFR con fondo pensione**, **Conto Deposito** e **PAC** (Piano di Accumulo).
+PWA mobile-first in HTML/CSS/JS vanilla per pianificare e confrontare tre strategie di investimento per il mercato italiano: **TFR / Fondo Pensione**, **PAC** e **Conto Deposito**.
 
 ## 🎯 Caratteristiche
 
-- **Single-file PWA-ready**: tutto in un unico `index.html` (HTML + CSS + JS inline)
+- **App a tab** con bottom navigation: Home (riepilogo), TFR, PAC, Deposito
 - **Calcoli real-time**: ogni input aggiorna istantaneamente tutti i risultati
-- **Sezioni espandibili**: UI pulita con collapse/expand
-- **Grafico comparativo**: barre orizzontali con Chart.js (CDN)
-- **Tabella di confronto**: vista riassuntiva di tutti gli scenari
-- **Capitale Totale Combinato**: somma intelligente del miglior TFR + Conto + PAC
-- **Responsive**: layout a 1/2/3 colonne (mobile/tablet/desktop)
-- **Palette lussuosa**: blu profondo + oro (`#0F3A66` + `#D4AF37`)
+- **TFR vs Fondo Pensione**: rivalutazione di legge, IRPEF automatica dagli scaglioni, tassazione separata, aliquota prestazione 15%→9%, risparmio fiscale 730 con cap deducibilità €5.164,57
+- **Database COVIP integrato**: ISC reali di fondi negoziali, aperti e PIP con auto-compilazione costi e rendimento atteso per comparto
+- **Conto Deposito a vincoli**: più vincoli con date e tassi diversi, tasse 26% e bollo 0,20%
+- **Salvataggio automatico** in localStorage + **sync cloud** opzionale con account Supabase
+- **Azzeramento per tab** con un tasto
+- **Zero framework, zero build step**
 
 ## 📂 Struttura del Progetto
 
 ```
 calcolatrice-investimenti/
-├── index.html        # File principale (HTML + CSS + JS)
-├── README.md         # Questo file
-├── CLAUDE.md         # Istruzioni per Claude Code
-├── package.json      # Configurazione dev server (opzionale)
-└── .gitignore        # File da escludere da git
+├── index.html        # Markup delle 4 viste + bottom nav
+├── css/style.css     # Design system e componenti
+├── js/
+│   ├── utils.js      # Helper DOM ($, gn, gi) e formattatori (fmtK, fmtEur)
+│   ├── pension.js    # Calcoli TFR / fondo pensione + IRPEF
+│   ├── pac.js        # Calcolo PAC (interesse composto mensile)
+│   ├── cd.js         # Conto deposito a vincoli
+│   ├── home.js       # Riepilogo patrimonio totale
+│   ├── covip.js      # Database ISC COVIP + selettore fondo
+│   ├── auth.js       # Login Supabase + sync cloud dei parametri
+│   └── app.js        # Tab switching, persistenza, init
+├── manifest.json     # PWA manifest
+└── images/           # Icone
 ```
 
 ## 🚀 Avvio Rapido
 
-### Opzione 1 — Apertura diretta
-Apri semplicemente `index.html` in un browser. Funziona offline tranne per Chart.js (caricato da CDN).
-
-### Opzione 2 — Dev Server con Python
 ```bash
-python3 -m http.server 8080
+python3 -m http.server 8080   # oppure: npm install && npm run dev
 ```
-Poi apri `http://localhost:8080`.
-
-### Opzione 3 — Dev Server con Node
-```bash
-npm install
-npm run dev
-```
+Poi apri `http://localhost:8080`. Funziona anche aprendo direttamente `index.html` (serve rete per il CDN di Supabase).
 
 ## 🧮 Logica di Calcolo
 
-### TFR Senza Fondo Pensione
-- Quota annua: `RAL ÷ 13.5` (formula di legge italiana)
-- Adeguamento carriera: la RAL cresce ogni anno della percentuale impostata
-- Rendimento netto: `rendimento_lordo − costi_gestione`
-- Simulazione anno per anno con interesse composto
+### TFR in azienda
+- Quota annua: `RAL ÷ 13,5` — con fondo pensione attivo il TFR maturando va tutto al fondo
+- Rivalutazione del pregresso: `1,5% + 75% × inflazione`, con imposta sostitutiva 17% annua
+- Liquidazione: tassazione separata con IRPEF media sulla retribuzione di riferimento
 
-### TFR Con Fondo Pensione
-- Contributi annuali (dipendente + azienda) lordi
-- **Fase 1 / Fase 2**: contributi modificabili dopo X anni
-- **Recupero fiscale 7.30%** sui contributi totali, accumulato nel fondo
-- Tassazione finale **solo sul capital gain** (default 15% per >35 anni)
+### Fondo Pensione
+- Contributi dipendente + azienda (% RAL) + quota TFR, mid-year convention
+- Rendimento netto = (lordo − costi) × (1 − tassazione rendimenti)
+- Prestazione finale tassata solo su contributi+TFR: 15%, −0,3%/anno oltre 15 anni di adesione (min 9%)
+- Risparmio 730: contributo dipendente × IRPEF marginale, cap €5.164,57/anno
 
-### Conto Deposito
-- Interesse composto annuo sul capitale vincolato
-- **Tasse 26%** sugli interessi maturati
-- **Imposta di bollo 0.20%** annua sul capitale (sottratta dal finale)
+### Conto Deposito (per vincolo)
+- Interesse semplice `C × r × T`, tasse 26% sugli interessi, bollo 0,20%/anno sul capitale
 
-### PAC (Piano di Accumulo)
-- PIC opzionale all'avvio + versamenti mensili
-- Interesse composto mensile (`tasso ÷ 12`)
-- Tassazione su capital gain (default 26% ETF azionari, 12.5% titoli di Stato)
-
-## 🛠️ Stack Tecnologico
-
-- **HTML5 + CSS3 + Vanilla JS**: zero framework, zero build step
-- **Chart.js 3.9.1**: caricato da `cdnjs.cloudflare.com` per il grafico comparativo
-- **Intl.NumberFormat**: formattazione valuta italiana nativa
-- **CSS Grid + Flexbox**: layout responsive senza media query complesse
-
-## 🎨 Personalizzazione
-
-Le variabili CSS sono in cima al file `index.html`:
-
-```css
-:root {
-    --primary: #0F3A66;      /* Blu profondo */
-    --secondary: #D4AF37;    /* Oro */
-    --accent: #1E5A96;       /* Blu accento */
-    /* ... */
-}
-```
+### PAC
+- Capitale iniziale opzionale + versamenti mensili, interesse composto mensile al netto del TER
+- Tassazione sul capital gain (default 26%)
 
 ## 📋 TODO / Idee Future
 
-- [ ] Salvataggio scenari in localStorage
-- [ ] Export risultati in PDF
-- [ ] Confronto storico dei calcoli effettuati
-- [ ] Dark mode
-- [ ] Modalità "wizard" per utenti meno esperti
-- [ ] Service Worker per uso offline completo (PWA)
-- [ ] Grafico evoluzione capitale anno per anno
-- [ ] Inflazione: calcolo del potere d'acquisto reale
+- [ ] Service Worker per uso offline completo (PWA installabile)
+- [ ] Inflazione: potere d'acquisto reale del capitale finale
+- [ ] Export/condivisione risultati
 - [ ] Simulazione Monte Carlo per rendimenti variabili
 
 ## 📜 Licenza

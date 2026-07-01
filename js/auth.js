@@ -4,6 +4,8 @@ const SUPABASE_KEY = 'sb_publishable_iD6vepSi4gYSHcT4Ar26cg_vwZrVDp3';
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let _saveTimer = null;
 
+const _esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
 async function authInit() {
     const { data: { session } } = await _sb.auth.getSession();
     _updateAuthUI(session?.user ?? null);
@@ -20,7 +22,7 @@ function _updateAuthUI(user) {
     if (!el) return;
     if (user) {
         el.innerHTML = `
-            <span class="auth-email">${user.email}</span>
+            <span class="auth-email">${_esc(user.email)}</span>
             <button class="auth-icon-btn logged-in" onclick="showAuthModal()" title="Account">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </button>`;
@@ -39,14 +41,18 @@ async function authSignOut() {
 async function _loadCloud() {
     const { data: { user } } = await _sb.auth.getUser();
     if (!user) return;
-    const { data } = await _sb.from('user_params').select('params,bonds').eq('id', user.id).single();
+    const { data } = await _sb.from('user_params').select('params,bonds').eq('id', user.id).maybeSingle();
     if (!data) return;
 
     if (data.params) {
+        // I select del fondo COVIP vanno ripristinati dopo aver popolato le option
+        const fundIds = ['s-fund-type', 's-fund-name', 's-fund-comparto'];
         Object.entries(data.params).forEach(([id, val]) => {
+            if (fundIds.includes(id)) return;
             const el = document.getElementById(id);
             if (el) el.value = val;
         });
+        restoreFundSelector(data.params);
     }
     if (Array.isArray(data.bonds) && data.bonds.length > 0) {
         BONDS = data.bonds;
@@ -98,7 +104,7 @@ async function showAuthModal() {
         $('auth-modal-content').innerHTML = `
             <button class="auth-close" onclick="hideAuthModal()">✕</button>
             <h2 class="auth-title">Account</h2>
-            <p class="auth-sub" style="word-break:break-all">${user.email}</p>
+            <p class="auth-sub" style="word-break:break-all">${_esc(user.email)}</p>
             <p class="auth-sub">I tuoi parametri vengono salvati automaticamente.</p>
             <button class="auth-btn-primary" style="width:100%;margin-top:8px" onclick="authSignOut();hideAuthModal()">Esci</button>`;
     } else {
@@ -107,7 +113,7 @@ async function showAuthModal() {
             <h2 class="auth-title">Il tuo account</h2>
             <p class="auth-sub">Accedi per salvare i parametri su qualsiasi dispositivo.</p>
             <input id="auth-email"    type="email"    placeholder="Email"    class="auth-input">
-            <input id="auth-password" type="password" placeholder="Password" class="auth-input">
+            <input id="auth-password" type="password" placeholder="Password" class="auth-input" onkeydown="if(event.key==='Enter')submitAuth('signin')">
             <div id="auth-error" class="auth-error"></div>
             <div class="auth-actions">
                 <button class="auth-btn-primary"   onclick="submitAuth('signin')">Accedi</button>
@@ -120,7 +126,8 @@ async function showAuthModal() {
 
 function hideAuthModal() {
     $('auth-modal').style.display = 'none';
-    $('auth-error').textContent = '';
+    const err = $('auth-error');
+    if (err) err.textContent = '';
 }
 
 async function submitAuth(mode) {
@@ -139,11 +146,15 @@ async function submitAuth(mode) {
         } else {
             const { error } = await _sb.auth.signUp({ email, password });
             if (error) throw error;
-            errEl.style.color = '#10B981';
-            errEl.textContent = 'Registrazione ok! Controlla la tua email per confermare.';
+            if (errEl) {
+                errEl.style.color = '#10B981';
+                errEl.textContent = 'Registrazione ok! Controlla la tua email per confermare.';
+            }
         }
     } catch(e) {
-        errEl.style.color = '#F87171';
-        errEl.textContent = e.message;
+        if (errEl) {
+            errEl.style.color = '#F87171';
+            errEl.textContent = e.message;
+        }
     }
 }
