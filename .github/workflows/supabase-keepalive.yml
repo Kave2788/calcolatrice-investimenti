@@ -1,0 +1,24 @@
+name: Supabase keep-alive
+
+# Ping ogni 3 giorni per evitare l'auto-pausa del piano gratuito Supabase
+on:
+  schedule:
+    - cron: '0 8 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          # La chiave è quella publishable, già pubblica nel client (js/auth.js)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://xnwfajifsbveqotwkyxl.supabase.co/rest/v1/user_params?select=id&limit=1" \
+            -H "apikey: sb_publishable_iD6vepSi4gYSHcT4Ar26cg_vwZrVDp3")
+          echo "HTTP $STATUS"
+          # 200/401/403 vanno tutti bene: conta che la richiesta arrivi al progetto
+          if [ "$STATUS" -ge 500 ] || [ "$STATUS" -eq 000 ]; then
+            echo "Supabase non raggiungibile (progetto in pausa?)" >&2
+            exit 1
+          fi
