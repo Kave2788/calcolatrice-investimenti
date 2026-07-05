@@ -39,49 +39,59 @@ async function authSignOut() {
 }
 
 async function _loadCloud() {
-    const { data: { user } } = await _sb.auth.getUser();
-    if (!user) return;
-    const { data } = await _sb.from('user_params').select('params,bonds').eq('id', user.id).maybeSingle();
-    if (!data) return;
+    try {
+        const { data: { user } } = await _sb.auth.getUser();
+        if (!user) return;
+        const { data, error } = await _sb.from('user_params').select('params,bonds').eq('id', user.id).maybeSingle();
+        if (error) throw error;
+        if (!data) return;
 
-    if (data.params) {
-        // I select del fondo COVIP vanno ripristinati dopo aver popolato le option
-        const fundIds = ['s-fund-type', 's-fund-name', 's-fund-comparto'];
-        Object.entries(data.params).forEach(([id, val]) => {
-            if (fundIds.includes(id)) return;
-            const el = document.getElementById(id);
-            if (el) el.value = val;
-        });
-        restoreFundSelector(data.params);
+        if (data.params) {
+            // I select del fondo COVIP vanno ripristinati dopo aver popolato le option
+            const fundIds = ['s-fund-type', 's-fund-name', 's-fund-comparto'];
+            Object.entries(data.params).forEach(([id, val]) => {
+                if (fundIds.includes(id)) return;
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            });
+            restoreFundSelector(data.params);
+        }
+        if (Array.isArray(data.bonds) && data.bonds.length > 0) {
+            BONDS = data.bonds;
+            renderBonds();
+        }
+        updateAll();
+        _showSyncBadge('Dati caricati');
+    } catch (e) {
+        _showSyncBadge('Caricamento fallito', true);
     }
-    if (Array.isArray(data.bonds) && data.bonds.length > 0) {
-        BONDS = data.bonds;
-        renderBonds();
-    }
-    updateAll();
-    _showSyncBadge('Dati caricati');
 }
 
 async function _saveCloud() {
-    const { data: { user } } = await _sb.auth.getUser();
-    if (!user) return;
+    try {
+        const { data: { user } } = await _sb.auth.getUser();
+        if (!user) return;
 
-    const params = {};
-    document.querySelectorAll('input[type=number], input[type=text]').forEach(el => {
-        if (el.id) params[el.id] = el.value;
-    });
-    ['s-fund-type', 's-fund-name', 's-fund-comparto'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) params[id] = el.value;
-    });
+        const params = {};
+        document.querySelectorAll('input[type=number], input[type=text]').forEach(el => {
+            if (el.id) params[el.id] = el.value;
+        });
+        ['s-fund-type', 's-fund-name', 's-fund-comparto'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) params[id] = el.value;
+        });
 
-    await _sb.from('user_params').upsert({
-        id: user.id,
-        params,
-        bonds: BONDS,
-        updated_at: new Date().toISOString()
-    });
-    _showSyncBadge('Salvato');
+        const { error } = await _sb.from('user_params').upsert({
+            id: user.id,
+            params,
+            bonds: BONDS,
+            updated_at: new Date().toISOString()
+        });
+        if (error) throw error;
+        _showSyncBadge('Salvato');
+    } catch (e) {
+        _showSyncBadge('Salvataggio fallito', true);
+    }
 }
 
 function saveToCloud() {
@@ -89,10 +99,11 @@ function saveToCloud() {
     _saveTimer = setTimeout(_saveCloud, 1500);
 }
 
-function _showSyncBadge(msg) {
+function _showSyncBadge(msg, isError = false) {
     const el = $('sync-badge');
     if (!el) return;
     el.textContent = msg;
+    el.classList.toggle('error', isError);
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2000);
 }

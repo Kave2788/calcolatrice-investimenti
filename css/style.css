@@ -472,6 +472,7 @@ html, body {
     transition: opacity .3s;
 }
 #sync-badge.visible { opacity: 1; }
+#sync-badge.error { color: #F87171; }
 
 
 /* ── AUTH MODAL ── */

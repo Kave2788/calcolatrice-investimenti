@@ -109,6 +109,13 @@ function resetTab(tab, btn) {
     updateAll();
 }
 
+// ── SERVICE WORKER (PWA offline) ──
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+}
+
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
     restoreInputs();
