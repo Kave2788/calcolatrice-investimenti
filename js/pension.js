@@ -132,8 +132,8 @@ function calcPension() {
         : `15% − 0,3% per ogni anno oltre 15 (min 9%) · ${totalFPYears} anni totali`;
 
     // Dettaglio breakdown TFR: due capitali separati e addizionali
-    $('pension-tfr-net').textContent = fmtK(tfrNet);
-    $('pension-fp-net').textContent  = fmtK(fpNet);
+    animateNumber($('pension-tfr-net'), tfrNet, fmtK);
+    animateNumber($('pension-fp-net'), fpNet, fmtK);
 
     // Risparmio fiscale 730
     const savingTot = savingAnno * years;
@@ -153,7 +153,7 @@ function calcPension() {
         ? `Con questi parametri potresti avere un reddito aggiuntivo di circa ${fmtEur(monthlyIncome)} al mese per i primi 20 anni di pensione.`
         : 'Inserisci i tuoi parametri per scoprire il tuo futuro finanziario.';
 
-    $('pension-result').textContent = fmtK(totalNet);
+    animateNumber($('pension-result'), totalNet, fmtK);
 
     RESULTS.pension = { net: totalNet, paid: versatoFPTot, years };
 }

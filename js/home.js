@@ -3,8 +3,8 @@ function calcHome() {
     const a = RESULTS.pac;
     const c = RESULTS.cd;
 
-    $('home-total').textContent       = fmtK(p.net + a.net + c.net);
-    $('home-pension-val').textContent = fmtK(p.net);
-    $('home-pac-val').textContent     = fmtK(a.net);
-    $('home-cd-val').textContent      = fmtK(c.net);
+    animateNumber($('home-total'), p.net + a.net + c.net, fmtK);
+    animateNumber($('home-pension-val'), p.net, fmtK);
+    animateNumber($('home-pac-val'), a.net, fmtK);
+    animateNumber($('home-cd-val'), c.net, fmtK);
 }

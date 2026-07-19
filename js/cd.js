@@ -172,22 +172,22 @@ function calcCD() {
     const yearlyTax   = sumYears > 0 ? totalTax      / sumYears : 0;
 
     // Update riga readonly
-    $('d-cd-total').textContent          = fmtEur(totalDeposit);
+    animateNumber($('d-cd-total'), totalDeposit, fmtEur);
     $('d-cd-bonds-count').textContent    = BONDS.length === 0
         ? 'Nessun vincolo'
         : BONDS.length + (BONDS.length === 1 ? ' vincolo' : ' vincoli');
-    $('d-cd-maturity-gross').textContent = fmtEur(totalGross);
-    $('d-cd-maturity-net').textContent   = fmtEur(totalNet);
-    $('d-cd-yearly-gross').textContent   = fmtEur(yearlyGross);
-    $('d-cd-yearly-net').textContent     = fmtEur(Math.max(0, yearlyNet));
-    $('d-cd-tax-yearly').textContent     = fmtEur(yearlyTax);
-    $('d-cd-tax-total').textContent      = fmtEur(totalTax);
+    animateNumber($('d-cd-maturity-gross'), totalGross, fmtEur);
+    animateNumber($('d-cd-maturity-net'), totalNet, fmtEur);
+    animateNumber($('d-cd-yearly-gross'), yearlyGross, fmtEur);
+    animateNumber($('d-cd-yearly-net'), Math.max(0, yearlyNet), fmtEur);
+    animateNumber($('d-cd-tax-yearly'), yearlyTax, fmtEur);
+    animateNumber($('d-cd-tax-total'), totalTax, fmtEur);
 
     // Card grande: totale netto a scadenza
     $('cd-label').textContent  = BONDS.length === 0
         ? 'Aggiungi un vincolo'
         : 'Netto totale a scadenza';
-    $('cd-result').textContent = fmtK(totalNet);
+    animateNumber($('cd-result'), totalNet, fmtK);
 
     // Tip
     $('cd-tip').textContent = 'Calcoli al netto del 26% di tasse sugli interessi e dello 0,20% annuo di bollo.';

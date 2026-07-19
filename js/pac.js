@@ -20,7 +20,7 @@ function calcPAC() {
     const net       = capital - taxes;
     const gainNet   = Math.max(0, net - totalPaid);
 
-    $('pac-result').textContent    = fmtK(net);
+    animateNumber($('pac-result'), net, fmtK);
     $('d-pac-paid').textContent       = fmtEur(totalPaid);
     $('d-pac-gain-gross').textContent = fmtEur(gainGross);
     $('d-pac-taxes').textContent      = fmtEur(taxes);
