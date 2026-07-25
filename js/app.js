@@ -127,5 +127,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('input', () => { saveState(); saveToCloud(); });
     document.addEventListener('change', () => { saveState(); saveToCloud(); });
+
+    // Quando l'app va in background o viene chiusa, forza subito l'eventuale
+    // salvataggio cloud pendente: così le ultime modifiche non si perdono per
+    // colpa del debounce (causa dei "dati mancanti" al login successivo).
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') flushCloudSave();
+    });
+    window.addEventListener('pagehide', flushCloudSave);
+
     authInit();
 });

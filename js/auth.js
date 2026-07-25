@@ -44,7 +44,11 @@ async function _loadCloud() {
         if (!user) return;
         const { data, error } = await _sb.from('user_params').select('params,bonds').eq('id', user.id).maybeSingle();
         if (error) throw error;
-        if (!data) return;
+
+        // Cloud vuoto per questo utente (primo login, o compilato da sloggato):
+        // fai il seed dai valori già presenti localmente invece di non far nulla.
+        const cloudEmpty = !data || (data.params == null && !(Array.isArray(data.bonds) && data.bonds.length > 0));
+        if (cloudEmpty) { await _saveCloud(); return; }
 
         if (data.params) {
             // I select del fondo COVIP vanno ripristinati dopo aver popolato le option
@@ -97,6 +101,15 @@ async function _saveCloud() {
 function saveToCloud() {
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(_saveCloud, 1500);
+}
+
+// Forza subito il salvataggio pendente (senza attendere il debounce): usato
+// quando l'app va in background o viene chiusa, per non perdere le ultime
+// modifiche compilate a ridosso della chiusura.
+function flushCloudSave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = null;
+    _saveCloud();
 }
 
 function _showSyncBadge(msg, isError = false) {
