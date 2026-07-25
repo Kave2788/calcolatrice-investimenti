@@ -1,24 +1,33 @@
 name: Supabase keep-alive
 
-# Ping ogni 3 giorni per evitare l'auto-pausa del piano gratuito Supabase
+# Scrittura reale sul DB ogni giorno per evitare l'auto-pausa del piano gratuito.
+# Un semplice SELECT anonimo NON basta a resettare il timer di inattività:
+# serve un'attività di scrittura effettiva sul database.
 on:
   schedule:
-    - cron: '0 8 */3 * *'
+    - cron: '0 8 * * *'   # ogni giorno alle 08:00 UTC (margine ampio sui 7 giorni)
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST API
+      - name: Scrittura keep-alive su Supabase
         run: |
-          # La chiave è quella publishable, già pubblica nel client (js/auth.js)
+          # La chiave publishable è già pubblica nel client (js/auth.js).
+          # La tabella `keepalive` ha una policy RLS che consente al ruolo anon
+          # di aggiornare l'unica riga (id = 1) — vedi supabase/keepalive.sql.
+          KEY="sb_publishable_iD6vepSi4gYSHcT4Ar26cg_vwZrVDp3"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://xnwfajifsbveqotwkyxl.supabase.co/rest/v1/user_params?select=id&limit=1" \
-            -H "apikey: sb_publishable_iD6vepSi4gYSHcT4Ar26cg_vwZrVDp3")
+            -X PATCH "https://xnwfajifsbveqotwkyxl.supabase.co/rest/v1/keepalive?id=eq.1" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "{\"last_ping\": \"$(date -u +%FT%TZ)\"}")
           echo "HTTP $STATUS"
-          # 200/401/403 vanno tutti bene: conta che la richiesta arrivi al progetto
-          if [ "$STATUS" -ge 500 ] || [ "$STATUS" -eq 000 ]; then
-            echo "Supabase non raggiungibile (progetto in pausa?)" >&2
+          # 204 = aggiornamento riuscito. exit code 6 di curl (NXDOMAIN) => progetto in pausa.
+          if [ "$STATUS" != "204" ]; then
+            echo "Keep-alive fallito (progetto in pausa o policy mancante?) — HTTP $STATUS" >&2
             exit 1
           fi
