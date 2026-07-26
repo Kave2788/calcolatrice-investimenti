@@ -73,7 +73,8 @@ Con fondo pensione attivo il TFR maturando va tutto al fondo; in azienda si riva
 ### Fondo Pensione
 ```
 rendimento_netto = (lordo − costi) × (1 − tassazione_rendimenti)
-prestazione: 15% sui contributi+TFR, −0.3%/anno oltre 15 anni di adesione, min 9%
+prestazione: 15% sui contributi+TFR conferiti (compreso il saldo iniziale del fondo,
+             non sui rendimenti), −0.3%/anno oltre 15 anni di adesione, min 9%
 risparmio_730 = min(contributo_dipendente, 5164.57) × IRPEF_marginale
 ```
 
@@ -87,8 +88,10 @@ netto = C + interessi_lordi − tasse − bollo
 
 ### PAC con interesse composto mensile
 ```
-per ogni mese: capitale = capitale × (1 + (tasso−TER)/12) + versamento_mensile
-tasse = max(0, capitale − versato_totale) × aliquota
+per ogni mese: capitale = (capitale × (1 + (tasso−TER)/12) + versamento_mensile) × (1 − 0.002/12)
+                          # l'ultimo fattore è il bollo 0,20% annuo sul controvalore
+capital_gain = max(0, capitale + bollo_totale − versato_totale) × aliquota
+netto = capitale − capital_gain      # il bollo è già uscito dal controvalore
 ```
 
 ## 🚧 Roadmap & Idee

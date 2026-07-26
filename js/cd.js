@@ -7,6 +7,17 @@ function loadBonds() {
         const raw = localStorage.getItem(BONDS_KEY);
         BONDS = raw ? JSON.parse(raw) : [];
     } catch(e) { BONDS = []; }
+    normalizeBonds();
+}
+
+// I vincoli salvati prima dell'introduzione della durata non hanno il campo `months`:
+// se inizio+durata coincide con la scadenza salvata, riaggancia la durata corrispondente,
+// altrimenti resta "Personalizzata". Nessun dato esistente viene alterato.
+function normalizeBonds() {
+    BONDS.forEach(b => {
+        if (b.months !== undefined) return;
+        b.months = BOND_DURATIONS.find(m => addMonths(b.start, m) === b.end) ?? null;
+    });
 }
 
 function saveBonds() {
@@ -15,15 +26,29 @@ function saveBonds() {
 
 function isoDate(d) { return d.toISOString().slice(0,10); }
 
+// Durate offerte dai conti deposito italiani (mesi). '' = scadenza personalizzata
+const BOND_DURATIONS = [3, 6, 12, 18, 24, 36, 48, 60];
+
+// Somma mesi a una data ISO, con clamp sull'ultimo giorno del mese
+// (31 gennaio + 1 mese → 28/29 febbraio, non 2/3 marzo)
+function addMonths(iso, months) {
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    const day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+    return isoDate(d);
+}
+
 function defaultBond() {
-    const today = new Date();
-    const end = new Date(today);
-    end.setFullYear(end.getFullYear() + 1);
+    const start = isoDate(new Date());
     return {
         id: Date.now() + Math.random(),
         amount: 10000,
-        start: isoDate(today),
-        end: isoDate(end),
+        start,
+        months: 12,               // scadenza derivata dalla durata
+        end: addMonths(start, 12),
         rate: 3.0
     };
 }
@@ -62,6 +87,7 @@ function toggleBondsEditor() {
 function addBond() {
     BONDS.push(defaultBond());
     saveBonds();
+    saveToCloud();   // il listener globale 'input' non scatta sul click: sincronizza a mano
     renderBonds();
     updateAll();
     if (!$('cd-bonds-editor').classList.contains('open')) toggleBondsEditor();
@@ -70,6 +96,7 @@ function addBond() {
 function removeBond(id) {
     BONDS = BONDS.filter(b => b.id !== id);
     saveBonds();
+    saveToCloud();   // idem: la cancellazione non passa dal listener 'input'
     renderBonds();
     updateAll();
 }
@@ -77,8 +104,36 @@ function removeBond(id) {
 function updateBond(id, field, value) {
     const b = BONDS.find(x => x.id === id);
     if (!b) return;
-    if (field === 'amount' || field === 'rate') b[field] = parseFloat(value) || 0;
-    else b[field] = value;
+    const card = document.querySelector(`#cd-bonds-list .bond-card[data-bond-id="${id}"]`);
+
+    if (field === 'amount' || field === 'rate') {
+        b[field] = parseFloat(value) || 0;
+    } else if (field === 'months') {
+        // Durata scelta dal menu: ricalcola la scadenza dalla data di inizio
+        b.months = value === '' ? null : parseInt(value);
+        if (b.months) {
+            b.end = addMonths(b.start, b.months);
+            const endEl = card?.querySelector('.bond-end');
+            if (endEl) endEl.value = b.end;
+        }
+    } else if (field === 'start') {
+        b.start = value;
+        // Con una durata impostata la scadenza segue automaticamente l'inizio
+        if (b.months) {
+            b.end = addMonths(b.start, b.months);
+            const endEl = card?.querySelector('.bond-end');
+            if (endEl) endEl.value = b.end;
+        }
+    } else if (field === 'end') {
+        // Scadenza toccata a mano → la durata diventa "personalizzata"
+        b.end = value;
+        b.months = null;
+        const mEl = card?.querySelector('.bond-months');
+        if (mEl) mEl.value = '';
+    } else {
+        b[field] = value;
+    }
+
     saveBonds();
     updateBondNets();   // aggiorna solo i netti visualizzati, niente re-render (no focus loss)
     updateAll();
@@ -106,8 +161,11 @@ function renderBonds() {
     }
     list.innerHTML = BONDS.map((b, idx) => {
         const r = computeBond(b);
+        const durOpts = BOND_DURATIONS.map(m =>
+            `<option value="${m}"${b.months === m ? ' selected' : ''}>${m < 12 ? m + ' mesi' : (m / 12) + (m === 12 ? ' anno' : ' anni')}</option>`
+        ).join('');
         return `
-        <div class="bond-card">
+        <div class="bond-card" data-bond-id="${b.id}">
             <div class="bond-card-header">
                 <span class="bond-title">Vincolo ${idx + 1}</span>
                 <button class="bond-delete" onclick="removeBond(${b.id})" title="Elimina">×</button>
@@ -119,12 +177,19 @@ function renderBonds() {
             </div>
             <div class="bond-row">
                 <label>Data inizio</label>
-                <input type="date" value="${b.start}"
+                <input type="date" class="bond-start" value="${b.start}"
                     oninput="updateBond(${b.id}, 'start', this.value)">
             </div>
             <div class="bond-row">
+                <label>Durata</label>
+                <select class="bond-months" onchange="updateBond(${b.id}, 'months', this.value)">
+                    ${durOpts}
+                    <option value=""${b.months ? '' : ' selected'}>Personalizzata</option>
+                </select>
+            </div>
+            <div class="bond-row">
                 <label>Data scadenza</label>
-                <input type="date" value="${b.end}"
+                <input type="date" class="bond-end" value="${b.end}"
                     oninput="updateBond(${b.id}, 'end', this.value)">
             </div>
             <div class="bond-row">
@@ -149,8 +214,13 @@ function calcCD() {
     let totalGain    = 0;
     let totalTax     = 0;
     let maxYears      = 0;
-    let totalGrossInt = 0;  // somma interessi lordi a scadenza (per media annua)
-    let sumYears      = 0;  // somma delle durate (denominatore media ponderata)
+    // Gli "annui" sono la fotografia di oggi: somma dei rendimenti annui dei soli
+    // vincoli in corso in questo momento (i vincoli corrono in parallelo, quindi in
+    // un anno maturano tutti insieme; quelli scaduti o non ancora partiti non rendono)
+    let yearlyGross   = 0;
+    let yearlyTax     = 0;
+    let activeCount   = 0;
+    const now = new Date();
 
     const bondResults = BONDS.map(b => {
         const r = computeBond(b);
@@ -159,17 +229,17 @@ function calcCD() {
         totalNet      += r.netTotal;
         totalGain     += r.netInterest;
         totalTax      += r.tax + r.bollo;
-        totalGrossInt += r.grossInterest;
-        sumYears      += r.years;
+        if (r.years > 0 && new Date(b.start) <= now && now < new Date(b.end)) {
+            const gAnno = b.amount * (b.rate / 100);            // interessi lordi di un anno pieno
+            yearlyGross += gAnno;
+            yearlyTax   += gAnno * CD_TAX_RATE + b.amount * CD_BOLLO_RATE;
+            activeCount++;
+        }
         if (r.years > maxYears) maxYears = r.years;
         return { b, r };
     });
 
-    // Tutti gli "annui" usano media ponderata sulle durate dei vincoli
-    // (così la coerenza lordo − tasse = netto vale anche con vincoli sfalsati)
-    const yearlyGross = sumYears > 0 ? totalGrossInt / sumYears : 0;
-    const yearlyNet   = sumYears > 0 ? totalGain     / sumYears : 0;
-    const yearlyTax   = sumYears > 0 ? totalTax      / sumYears : 0;
+    const yearlyNet = yearlyGross - yearlyTax;
 
     // Update riga readonly
     animateNumber($('d-cd-total'), totalDeposit, fmtEur);
@@ -179,6 +249,9 @@ function calcCD() {
     animateNumber($('d-cd-maturity-gross'), totalGross, fmtEur);
     animateNumber($('d-cd-maturity-net'), totalNet, fmtEur);
     animateNumber($('d-cd-yearly-gross'), yearlyGross, fmtEur);
+    $('d-cd-yearly-sub').textContent = activeCount === 0
+        ? (BONDS.length === 0 ? '—' : 'nessun vincolo attivo oggi')
+        : `su ${activeCount} ${activeCount === 1 ? 'vincolo attivo' : 'vincoli attivi'} oggi`;
     animateNumber($('d-cd-yearly-net'), Math.max(0, yearlyNet), fmtEur);
     animateNumber($('d-cd-tax-yearly'), yearlyTax, fmtEur);
     animateNumber($('d-cd-tax-total'), totalTax, fmtEur);

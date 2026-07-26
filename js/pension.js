@@ -95,10 +95,15 @@ function calcPension() {
     // La tassazione "prestazione finale" si applica solo su contributi+TFR conferiti,
     // NON sui rendimenti. L'aliquota considera gli anni totali di iscrizione al fondo
     // (pregressi + simulazione), così il saldo iniziale non viene sovratassato.
+    // La base imponibile include anche il saldo già presente nel fondo: anche quello
+    // è fatto di contributi + TFR conferiti, che alla liquidazione vengono tassati.
+    // (Approssimazione prudenziale: si tassa l'intero saldo iniziale, senza scorporare
+    // la quota di rendimenti già maturati, che non è ricavabile dai dati inseriti.)
     const versatoFPTot  = versatoFPAnno * years;
+    const baseImponibileFP = versatoFPTot + initFP;
     const totalFPYears  = fpYearsPre + years;
     const prestRate     = prestazioneRate(totalFPYears);
-    const prestTax      = versatoFPTot * prestRate;
+    const prestTax      = baseImponibileFP * prestRate;
     const fpNet         = Math.max(0, capFP - prestTax);
 
     // ── Tassazione finale TFR in azienda (tassazione separata) ──

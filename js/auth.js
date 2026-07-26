@@ -76,9 +76,14 @@ async function _loadCloud() {
         }
         if (Array.isArray(data.bonds) && data.bonds.length > 0) {
             BONDS = data.bonds;
+            normalizeBonds();   // riaggancia la durata ai vincoli salvati senza `months`
             renderBonds();
         }
         updateAll();
+        // Allinea anche la copia locale: senza questo, al reload successivo
+        // (o offline) restoreInputs/loadBonds rimetterebbero i vecchi valori
+        saveState();
+        saveBonds();
         _showSyncBadge('Dati caricati');
     } catch (e) {
         _showSyncBadge('Caricamento fallito', true);

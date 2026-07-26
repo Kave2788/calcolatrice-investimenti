@@ -49,15 +49,17 @@ Poi apri `http://localhost:8080`. Funziona anche aprendo direttamente `index.htm
 ### Fondo Pensione
 - Contributi dipendente + azienda (% RAL) + quota TFR, mid-year convention
 - Rendimento netto = (lordo − costi) × (1 − tassazione rendimenti)
-- Prestazione finale tassata solo su contributi+TFR: 15%, −0,3%/anno oltre 15 anni di adesione (min 9%)
+- Prestazione finale tassata solo su contributi+TFR (inclusi quelli del saldo già nel fondo, non sui rendimenti): 15%, −0,3%/anno oltre 15 anni di adesione (min 9%)
 - Risparmio 730: contributo dipendente × IRPEF marginale, cap €5.164,57/anno
 
 ### Conto Deposito (per vincolo)
 - Interesse semplice `C × r × T`, tasse 26% sugli interessi, bollo 0,20%/anno sul capitale
+- Durata selezionabile (3/6 mesi, 1–5 anni): la scadenza si calcola dalla data di inizio, oppure si imposta a mano ("Personalizzata")
+- I totali "a scadenza" sommano tutti i vincoli; il "rendimento annuo" considera solo quelli in corso oggi (i vincoli corrono in parallelo)
 
 ### PAC
 - Capitale iniziale opzionale + versamenti mensili, interesse composto mensile al netto del TER
-- Tassazione sul capital gain (default 26%)
+- Tassazione sul capital gain (default 26%) + bollo 0,20%/anno sul controvalore
 
 ## 📋 TODO / Idee Future
 
