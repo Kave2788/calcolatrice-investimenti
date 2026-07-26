@@ -96,15 +96,11 @@ html, body {
     transform: rotate(18deg);
     pointer-events: none;
 }
-.result-card.gold   { background: linear-gradient(145deg,#3D2800,#1A1000); animation: glow-gold 3.2s ease-in-out infinite; }
-.result-card.purple { background: linear-gradient(145deg,#2D1B69,#130D35); animation: glow-purple 3.2s ease-in-out infinite; }
-.result-card.green  { background: linear-gradient(145deg,#064E3B,#071A13); animation: glow-green 3.2s ease-in-out infinite; }
-.result-card.blue   { background: linear-gradient(145deg,#1E3A5F,#091525); animation: glow-blue 3.2s ease-in-out infinite; }
-
-@keyframes glow-gold   { 0%,100% { box-shadow: 0 10px 30px -12px rgba(245,158,11,.22); } 50% { box-shadow: 0 10px 42px -8px rgba(245,158,11,.42); } }
-@keyframes glow-purple { 0%,100% { box-shadow: 0 10px 30px -12px rgba(167,139,250,.22); } 50% { box-shadow: 0 10px 42px -8px rgba(167,139,250,.42); } }
-@keyframes glow-green  { 0%,100% { box-shadow: 0 10px 30px -12px rgba(52,211,153,.22); } 50% { box-shadow: 0 10px 42px -8px rgba(52,211,153,.42); } }
-@keyframes glow-blue   { 0%,100% { box-shadow: 0 10px 30px -12px rgba(96,165,250,.22); } 50% { box-shadow: 0 10px 42px -8px rgba(96,165,250,.42); } }
+/* Solo il gradiente di sfondo: niente glow né ombra colorata */
+.result-card.gold   { background: linear-gradient(145deg,#3D2800,#1A1000); }
+.result-card.purple { background: linear-gradient(145deg,#2D1B69,#130D35); }
+.result-card.green  { background: linear-gradient(145deg,#064E3B,#071A13); }
+.result-card.blue   { background: linear-gradient(145deg,#1E3A5F,#091525); }
 
 .result-label { font-size: 0.78em; color: rgba(255,255,255,0.55); margin-bottom: 6px; position: relative; }
 .result-value { font-size: 2.7em; font-weight: 700; letter-spacing: -1.5px; margin-bottom: 10px; position: relative; }
