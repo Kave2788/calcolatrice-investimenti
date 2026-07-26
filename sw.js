@@ -1,5 +1,5 @@
 // Service Worker: cache-first per gli asset statici, offline-first per la PWA
-const CACHE_NAME = 'calc-investimenti-v1';
+const CACHE_NAME = 'calc-investimenti-v2';
 
 const PRECACHE_URLS = [
     './',

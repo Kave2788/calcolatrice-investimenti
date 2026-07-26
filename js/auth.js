@@ -3,18 +3,32 @@ const SUPABASE_KEY = 'sb_publishable_iD6vepSi4gYSHcT4Ar26cg_vwZrVDp3';
 
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let _saveTimer = null;
+let _recovering = false;   // true mentre l'utente sta reimpostando la password dal link email
 
 const _esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
 async function authInit() {
+    // Il link di recupero torna con #type=recovery: intercettalo prima di tutto
+    _recovering = /[#&]type=recovery/.test(location.hash);
+
     const { data: { session } } = await _sb.auth.getSession();
     _updateAuthUI(session?.user ?? null);
-    if (session?.user) await _loadCloud();
+    if (session?.user && !_recovering) await _loadCloud();
 
     _sb.auth.onAuthStateChange(async (event, session) => {
         _updateAuthUI(session?.user ?? null);
-        if (event === 'SIGNED_IN') await _loadCloud();
+        if (event === 'PASSWORD_RECOVERY') {
+            _recovering = true;
+            showNewPasswordForm();
+            return;
+        }
+        if (event === 'SIGNED_IN' && !_recovering) await _loadCloud();
     });
+
+    if (_recovering) {
+        history.replaceState(null, '', location.pathname + location.search);
+        showNewPasswordForm();
+    }
 }
 
 function _updateAuthUI(user) {
@@ -142,16 +156,97 @@ async function showAuthModal() {
             <div class="auth-actions">
                 <button class="auth-btn-primary"   onclick="submitAuth('signin')">Accedi</button>
                 <button class="auth-btn-secondary" onclick="submitAuth('signup')">Registrati</button>
-            </div>`;
+            </div>
+            <button class="auth-link" onclick="showResetForm()">Password dimenticata?</button>`;
         setTimeout(() => $('auth-email')?.focus(), 50);
     }
     $('auth-modal').style.display = 'flex';
+}
+
+// Form di richiesta reset: invia il link di recupero all'email indicata
+function showResetForm(prefill = '') {
+    $('auth-modal-content').innerHTML = `
+        <button class="auth-close" onclick="hideAuthModal()">✕</button>
+        <h2 class="auth-title">Recupera password</h2>
+        <p class="auth-sub">Ti inviamo un link per impostare una nuova password.</p>
+        <input id="auth-email" type="email" placeholder="Email" class="auth-input"
+               value="${_esc(prefill)}" onkeydown="if(event.key==='Enter')submitReset()">
+        <div id="auth-error" class="auth-error"></div>
+        <div class="auth-actions">
+            <button class="auth-btn-primary" onclick="submitReset()">Invia link</button>
+            <button class="auth-btn-secondary" onclick="showAuthModal()">Indietro</button>
+        </div>`;
+    $('auth-modal').style.display = 'flex';
+    setTimeout(() => $('auth-email')?.focus(), 50);
+}
+
+async function submitReset() {
+    const email = $('auth-email')?.value.trim();
+    const errEl = $('auth-error');
+    if (errEl) errEl.textContent = '';
+    if (!email) { if (errEl) errEl.textContent = 'Inserisci la tua email.'; return; }
+
+    try {
+        // redirectTo riporta sull'app: al ritorno Supabase emette PASSWORD_RECOVERY
+        const { error } = await _sb.auth.resetPasswordForEmail(email, {
+            redirectTo: location.origin + location.pathname
+        });
+        if (error) throw error;
+        if (errEl) {
+            errEl.style.color = '#10B981';
+            errEl.textContent = 'Email inviata! Controlla la posta (anche lo spam).';
+        }
+    } catch (e) {
+        if (errEl) {
+            errEl.style.color = '#F87171';
+            errEl.textContent = e.message;
+        }
+    }
+}
+
+// Form mostrato al rientro dal link email: imposta la nuova password
+function showNewPasswordForm() {
+    $('auth-modal-content').innerHTML = `
+        <button class="auth-close" onclick="hideAuthModal()">✕</button>
+        <h2 class="auth-title">Nuova password</h2>
+        <p class="auth-sub">Scegli una nuova password per il tuo account.</p>
+        <input id="auth-new-password"  type="password" placeholder="Nuova password" class="auth-input">
+        <input id="auth-new-password2" type="password" placeholder="Conferma password" class="auth-input"
+               onkeydown="if(event.key==='Enter')submitNewPassword()">
+        <div id="auth-error" class="auth-error"></div>
+        <div class="auth-actions">
+            <button class="auth-btn-primary" onclick="submitNewPassword()">Salva password</button>
+        </div>`;
+    $('auth-modal').style.display = 'flex';
+    setTimeout(() => $('auth-new-password')?.focus(), 50);
+}
+
+async function submitNewPassword() {
+    const p1 = $('auth-new-password')?.value;
+    const p2 = $('auth-new-password2')?.value;
+    const errEl = $('auth-error');
+    if (errEl) { errEl.textContent = ''; errEl.style.color = '#F87171'; }
+
+    if (!p1 || !p2)   { if (errEl) errEl.textContent = 'Compila entrambi i campi.'; return; }
+    if (p1 !== p2)    { if (errEl) errEl.textContent = 'Le password non coincidono.'; return; }
+    if (p1.length < 6){ if (errEl) errEl.textContent = 'Minimo 6 caratteri.'; return; }
+
+    try {
+        const { error } = await _sb.auth.updateUser({ password: p1 });
+        if (error) throw error;
+        hideAuthModal();   // resetta _recovering e ricarica i dati cloud
+        _showSyncBadge('Password aggiornata');
+    } catch (e) {
+        if (errEl) errEl.textContent = e.message;
+    }
 }
 
 function hideAuthModal() {
     $('auth-modal').style.display = 'none';
     const err = $('auth-error');
     if (err) err.textContent = '';
+    // Uscendo dal flusso di recupero la sessione è comunque valida: carica i dati
+    if (_recovering) { _recovering = false; _loadCloud(); }
 }
 
 async function submitAuth(mode) {
