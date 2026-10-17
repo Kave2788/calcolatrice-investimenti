@@ -74,15 +74,6 @@ function computeBond(b) {
     return { years, grossInterest, tax, bollo, netInterest, netTotal };
 }
 
-// ── TOGGLE EDITOR ──
-function toggleBondsEditor() {
-    const ed = $('cd-bonds-editor');
-    const ch = $('cd-bonds-chevron');
-    const open = !ed.classList.contains('open');
-    ed.classList.toggle('open', open);
-    ch.classList.toggle('open', open);
-}
-
 // ── ADD / REMOVE / UPDATE ──
 function addBond() {
     BONDS.push(defaultBond());
@@ -90,7 +81,6 @@ function addBond() {
     saveToCloud();   // il listener globale 'input' non scatta sul click: sincronizza a mano
     renderBonds();
     updateAll();
-    if (!$('cd-bonds-editor').classList.contains('open')) toggleBondsEditor();
 }
 
 function removeBond(id) {
@@ -147,60 +137,50 @@ function updateBondNets() {
         const r = computeBond(b);
         const label = card.querySelector('.bond-net-label');
         const value = card.querySelector('.bond-net-value');
-        if (label) label.textContent = `Netto a scadenza (${r.years.toFixed(1)} anni)`;
+        if (label) label.textContent = `Netto a scadenza (${r.years.toFixed(1).replace('.', ',')} anni)`;
         if (value) value.textContent = fmtEur(r.netTotal);
     });
 }
 
 // ── RENDER LISTA VINCOLI ──
+const durationLabel = m => m < 12 ? m + ' mesi' : (m / 12) + (m === 12 ? ' anno' : ' anni');
+
+// Riga campo: l'intera riga è una <label>, così ogni input ha il suo nome accessibile senza id
+// (gli id finirebbero nello stato salvato da saveState/saveToCloud)
+const bondField = (name, control) => `
+            <label class="field-row">
+                <span class="field-label"><span class="field-name">${name}</span></span>
+                ${control}
+            </label>`;
+
 function renderBonds() {
     const list = $('cd-bonds-list');
     if (BONDS.length === 0) {
-        list.innerHTML = '<div class="bonds-empty">Nessun vincolo. Aggiungine uno per iniziare.</div>';
+        list.innerHTML = '<div class="group-card bonds-empty">Nessun vincolo. Aggiungine uno per iniziare.</div>';
         return;
     }
     list.innerHTML = BONDS.map((b, idx) => {
         const r = computeBond(b);
         const durOpts = BOND_DURATIONS.map(m =>
-            `<option value="${m}"${b.months === m ? ' selected' : ''}>${m < 12 ? m + ' mesi' : (m / 12) + (m === 12 ? ' anno' : ' anni')}</option>`
+            `<option value="${m}"${b.months === m ? ' selected' : ''}>${durationLabel(m)}</option>`
         ).join('');
         return `
-        <div class="bond-card" data-bond-id="${b.id}">
+        <div class="group-card bond-card" data-bond-id="${b.id}">
             <div class="bond-card-header">
                 <span class="bond-title">Vincolo ${idx + 1}</span>
-                <button class="bond-delete" onclick="removeBond(${b.id})" title="Elimina">×</button>
-            </div>
-            <div class="bond-row">
-                <label>Importo (€)</label>
-                <input type="number" min="0" step="100" value="${b.amount}"
-                    oninput="updateBond(${b.id}, 'amount', this.value)">
-            </div>
-            <div class="bond-row">
-                <label>Data inizio</label>
-                <input type="date" class="bond-start" value="${b.start}"
-                    oninput="updateBond(${b.id}, 'start', this.value)">
-            </div>
-            <div class="bond-row">
-                <label>Durata</label>
-                <select class="bond-months" onchange="updateBond(${b.id}, 'months', this.value)">
+                <button type="button" class="bond-delete" onclick="removeBond(${b.id})" aria-label="Elimina vincolo ${idx + 1}">×</button>
+            </div>${bondField('Importo', `<span class="field-box wide"><span class="field-affix">€</span><input type="number" class="field-input" min="0" step="100" inputmode="decimal" value="${b.amount}"
+                    oninput="updateBond(${b.id}, 'amount', this.value)"></span>`)}${bondField('Data inizio', `<span class="field-box"><input type="date" class="field-input date bond-start" value="${b.start}"
+                    oninput="updateBond(${b.id}, 'start', this.value)"></span>`)}${bondField('Durata', `<select class="field-select compact bond-months" onchange="updateBond(${b.id}, 'months', this.value)">
                     ${durOpts}
                     <option value=""${b.months ? '' : ' selected'}>Personalizzata</option>
-                </select>
-            </div>
-            <div class="bond-row">
-                <label>Data scadenza</label>
-                <input type="date" class="bond-end" value="${b.end}"
-                    oninput="updateBond(${b.id}, 'end', this.value)">
-            </div>
-            <div class="bond-row">
-                <label>Tasso lordo (%)</label>
-                <input type="number" min="0" max="30" step="0.05" value="${b.rate}"
-                    oninput="updateBond(${b.id}, 'rate', this.value)">
-            </div>
-            ${r.years <= 0 ? `<div class="bond-warning">⚠ Data scadenza precedente alla data inizio</div>` : `
-            <div class="bond-net">
-                <span class="bond-net-label">Netto a scadenza (${r.years.toFixed(1)} anni)</span>
-                <span class="bond-net-value">${fmtEur(r.netTotal)}</span>
+                </select>`)}${bondField('Scadenza', `<span class="field-box"><input type="date" class="field-input date bond-end" value="${b.end}"
+                    oninput="updateBond(${b.id}, 'end', this.value)"></span>`)}${bondField('Tasso lordo', `<span class="field-box"><input type="number" class="field-input" min="0" max="30" step="0.05" inputmode="decimal" value="${b.rate}"
+                    oninput="updateBond(${b.id}, 'rate', this.value)"><span class="field-affix">%</span></span>`)}
+            ${r.years <= 0 ? `<div class="field-row bond-warning" role="alert">La data di scadenza è precedente alla data di inizio</div>` : `
+            <div class="field-row computed">
+                <span class="field-label"><span class="field-name bond-net-label">Netto a scadenza (${r.years.toFixed(1).replace('.', ',')} anni)</span></span>
+                <span class="field-value bond-net-value">${fmtEur(r.netTotal)}</span>
             </div>`}
         </div>`;
     }).join('');
@@ -222,7 +202,7 @@ function calcCD() {
     let activeCount   = 0;
     const now = new Date();
 
-    const bondResults = BONDS.map(b => {
+    BONDS.forEach(b => {
         const r = computeBond(b);
         totalDeposit  += b.amount;
         totalGross    += b.amount + r.grossInterest;
@@ -236,13 +216,15 @@ function calcCD() {
             activeCount++;
         }
         if (r.years > maxYears) maxYears = r.years;
-        return { b, r };
     });
 
     const yearlyNet = yearlyGross - yearlyTax;
 
-    // Update riga readonly
+    // Pillola: depositato + interessi − tasse e bollo = netto a scadenza
     animateNumber($('d-cd-total'), totalDeposit, fmtEur);
+    $('d-cd-pill-interest').textContent = fmtEur(pillReturns(totalNet, totalDeposit, totalTax));
+    $('d-cd-pill-taxes').textContent    = fmtEur(totalTax);
+    $('d-cd-pill-gain').textContent     = fmtEur(Math.max(0, totalGain));
     $('d-cd-bonds-count').textContent    = BONDS.length === 0
         ? 'Nessun vincolo'
         : BONDS.length + (BONDS.length === 1 ? ' vincolo' : ' vincoli');
@@ -261,52 +243,12 @@ function calcCD() {
         ? 'Aggiungi un vincolo'
         : 'Netto totale a scadenza';
     animateNumber($('cd-result'), totalNet, fmtK);
+    renderReal('cd', totalNet, maxYears);
 
     // Tip
     $('cd-tip').textContent = 'Calcoli al netto del 26% di tasse sugli interessi e dello 0,20% annuo di bollo.';
 
-    // Grafico: timeline mese per mese fino alla scadenza più lontana
-    // Per ogni mese, somma il valore corrente di ciascun vincolo (interesse semplice maturato pro-quota)
-    const totalMonths = Math.max(1, Math.ceil(maxYears * 12));
-    const labels = [];
-    const data   = [];
-    const dataGross = [];   // serie lorda parallela, usata dal grafico Home per confronto omogeneo con TFR/PAC
-    const yr0    = new Date().getFullYear();
-    const today  = new Date();
-
-    for (let m = 0; m <= totalMonths; m++) {
-        const date = new Date(today);
-        date.setMonth(date.getMonth() + m);
-
-        let value = 0;
-        let valueGross = 0;
-        for (const { b, r } of bondResults) {
-            const start = new Date(b.start);
-            const end   = new Date(b.end);
-            if (date <= start) {
-                // non ancora iniziato → conta capitale se la data di inizio è nel passato/presente
-                if (start <= today) { value += b.amount; valueGross += b.amount; }
-            } else if (date >= end) {
-                value      += r.netTotal;
-                valueGross += b.amount + r.grossInterest;
-            } else {
-                const elapsedDays = (date - start) / 86400000;
-                const elapsedYrs  = elapsedDays / 365.25;
-                const matured     = b.amount * (b.rate / 100) * elapsedYrs;
-                const matTax      = matured * CD_TAX_RATE;
-                const matBollo    = b.amount * CD_BOLLO_RATE * elapsedYrs;
-                value      += b.amount + matured - matTax - matBollo;
-                valueGross += b.amount + matured;
-            }
-        }
-
-        const yearIdx = m / 12;
-        const isYearEnd = m % 12 === 0;
-        labels.push(isYearEnd ? (m === 0 ? 'Oggi' : yr0 + Math.floor(yearIdx)) : '');
-        data.push(Math.round(value));
-        dataGross.push(Math.round(valueGross));
-    }
-
-    RESULTS.cd = { net: totalNet, gross: totalGross, paid: totalDeposit, years: Math.ceil(maxYears), series: data, seriesGross: dataGross };
+    // years esatti (non arrotondati): usati dalla Home per il valore reale e il sottotitolo
+    RESULTS.cd = { net: totalNet, paid: totalDeposit, years: maxYears };
     updateBondNets();
 }

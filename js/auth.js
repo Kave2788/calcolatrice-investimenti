@@ -1,13 +1,16 @@
 const SUPABASE_URL = 'https://xnwfajifsbveqotwkyxl.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_iD6vepSi4gYSHcT4Ar26cg_vwZrVDp3';
 
-const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Se la libreria Supabase non è caricata (offline al primo avvio, CDN irraggiungibile)
+// l'app funziona comunque in locale: tutte le funzioni cloud diventano no-op.
+const _sb = window.supabase?.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 let _saveTimer = null;
 let _recovering = false;   // true mentre l'utente sta reimpostando la password dal link email
 
 const _esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
 async function authInit() {
+    if (!_sb) return;
     // Il link di recupero torna con #type=recovery: intercettalo prima di tutto
     _recovering = /[#&]type=recovery/.test(location.hash);
 
@@ -49,10 +52,12 @@ function _updateAuthUI(user) {
 }
 
 async function authSignOut() {
+    if (!_sb) return;
     await _sb.auth.signOut();
 }
 
 async function _loadCloud() {
+    if (!_sb) return;
     try {
         const { data: { user } } = await _sb.auth.getUser();
         if (!user) return;
@@ -91,6 +96,7 @@ async function _loadCloud() {
 }
 
 async function _saveCloud() {
+    if (!_sb) return;
     try {
         const { data: { user } } = await _sb.auth.getUser();
         if (!user) return;
@@ -118,6 +124,7 @@ async function _saveCloud() {
 }
 
 function saveToCloud() {
+    if (!_sb) return;
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(_saveCloud, 1500);
 }
@@ -126,6 +133,7 @@ function saveToCloud() {
 // quando l'app va in background o viene chiusa, per non perdere le ultime
 // modifiche compilate a ridosso della chiusura.
 function flushCloudSave() {
+    if (!_sb) return;
     clearTimeout(_saveTimer);
     _saveTimer = null;
     _saveCloud();
@@ -142,6 +150,14 @@ function _showSyncBadge(msg, isError = false) {
 
 // ── MODAL ──
 async function showAuthModal() {
+    if (!_sb) {
+        $('auth-modal-content').innerHTML = `
+            <button class="auth-close" onclick="hideAuthModal()">✕</button>
+            <h2 class="auth-title">Sei offline</h2>
+            <p class="auth-sub">Il login non è disponibile senza connessione. I tuoi dati restano salvati su questo dispositivo.</p>`;
+        $('auth-modal').style.display = 'flex';
+        return;
+    }
     const { data: { user } } = await _sb.auth.getUser();
     if (user) {
         $('auth-modal-content').innerHTML = `

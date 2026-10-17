@@ -2,8 +2,9 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Investimenti</title>
+    <meta name="description" content="Calcolatrice per TFR e fondo pensione, PAC e conto deposito con il fisco italiano aggiornato: IRPEF, bollo, deducibilità 730.">
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -14,7 +15,9 @@
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://xnwfajifsbveqotwkyxl.supabase.co" crossorigin>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -23,42 +26,58 @@
     <div class="auth-card" id="auth-modal-content"></div>
 </div>
 
+<main id="main">
 <!-- ════════════════════ HOME ════════════════════ -->
 <div id="view-home" class="view active">
     <div class="view-header">
-        <h1>Riepilogo</h1>
+        <div class="header-stack">
+            <span class="header-kicker" id="home-date"></span>
+            <h1>Riepilogo</h1>
+        </div>
         <div id="auth-status">
-            <button class="auth-icon-btn" onclick="showAuthModal()" title="Accedi">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <button class="auth-icon-btn" onclick="showAuthModal()" aria-label="Accedi" title="Accedi">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </button>
         </div>
         <span id="sync-badge"></span>
     </div>
 
-    <div class="result-card gold compact" style="text-align:center">
-        <div class="result-label">Patrimonio totale stimato</div>
-        <div class="result-value" id="home-total">€ 0</div>
-    </div>
+    <section class="hero">
+        <div class="hero-label" id="home-label">Patrimonio netto stimato</div>
+        <div class="hero-value" id="home-total">€ 0</div>
+        <div class="hero-real" id="home-real"></div>
+        <div class="summary-pill" role="group" aria-label="Come si arriva al totale">
+            <div class="pill-cols">
+                <div class="pill-col">
+                    <span class="pill-label">Versato</span>
+                    <span class="pill-value"><span id="home-paid">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Guadagno netto</span>
+                    <span class="pill-value"><span class="pill-op plus">+</span><span id="home-gain">€ 0</span></span>
+                </div>
+            </div>
+            <div class="pill-foot"><span>Rendimento sul versato</span><span class="pill-strong" id="home-yield">—</span></div>
+        </div>
+    </section>
 
-    <div class="params-section">
-        <div class="params-header">
-            <span class="params-title">I tuoi strumenti</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-            <span class="param-label">TFR</span>
-            <span class="param-value purple" id="home-pension-val">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <span class="param-label">PAC</span>
-            <span class="param-value green" id="home-pac-val">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></div>
-            <span class="param-label">Conto Deposito</span>
-            <span class="param-value blue" id="home-cd-val">€ 0</span>
-        </div>
+    <h2 class="group-title">I tuoi strumenti</h2>
+    <div class="group-card">
+        <button type="button" class="instrument-row" onclick="switchTab('pension')">
+            <span class="instrument-icon purple"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+            <span class="instrument-text"><span class="instrument-name">TFR e fondo pensione</span><span class="instrument-sub" id="home-pension-sub"></span></span>
+            <span class="instrument-value purple" id="home-pension-val">€ 0</span>
+        </button>
+        <button type="button" class="instrument-row" onclick="switchTab('pac')">
+            <span class="instrument-icon green"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>
+            <span class="instrument-text"><span class="instrument-name">PAC</span><span class="instrument-sub" id="home-pac-sub"></span></span>
+            <span class="instrument-value green" id="home-pac-val">€ 0</span>
+        </button>
+        <button type="button" class="instrument-row" onclick="switchTab('cd')">
+            <span class="instrument-icon blue"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2 20 7H4z"/></svg></span>
+            <span class="instrument-text"><span class="instrument-name">Conto deposito</span><span class="instrument-sub" id="home-cd-sub"></span></span>
+            <span class="instrument-value blue" id="home-cd-val">€ 0</span>
+        </button>
     </div>
 </div>
 
@@ -66,417 +85,316 @@
 <div id="view-pension" class="view">
     <div class="view-header">
         <h1>TFR</h1>
-        <button class="reset-btn purple" onclick="resetTab('pension', this)" title="Azzera campi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <button class="reset-btn" onclick="resetTab('pension', this)" aria-label="Azzera i campi" title="Azzera campi">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
     </div>
 
-    <div class="result-card purple compact" style="text-align:center">
-        <div class="result-label" id="pension-label">Capitale netto finale stimato</div>
-        <div class="result-value" id="pension-result">€ 0</div>
-    </div>
+    <section class="hero">
+        <div class="hero-label" id="pension-label">Capitale netto finale stimato</div>
+        <div class="hero-value" id="pension-result">€ 0</div>
+        <div class="hero-real" id="pension-real"></div>
+        <div class="summary-pill" role="group" aria-label="Come si arriva al totale">
+            <div class="pill-cols">
+                <div class="pill-col">
+                    <span class="pill-label">Versato</span>
+                    <span class="pill-value"><span id="d-pension-pill-paid">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Rendimenti</span>
+                    <span class="pill-value"><span class="pill-op plus">+</span><span id="d-pension-pill-returns">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Tasse</span>
+                    <span class="pill-value"><span class="pill-op minus">−</span><span id="d-pension-pill-taxes">€ 0</span></span>
+                </div>
+            </div>
+            <div class="pill-foot"><span>Nel fondo <span id="pension-fp-net">€ 0</span></span><span>TFR in azienda <span id="pension-tfr-net">€ 0</span></span></div>
+        </div>
+    </section>
 
-    <div class="compare-card">
-        <div class="compare-row">
-            <span class="compare-dot dim"></span>
-            <span class="compare-label">TFR in azienda</span>
-            <span class="compare-value" id="pension-tfr-net">€ 0</span>
-        </div>
-        <div class="compare-row">
-            <span class="compare-dot purple"></span>
-            <span class="compare-label">Nel fondo pensione</span>
-            <span class="compare-value purple" id="pension-fp-net">€ 0</span>
-        </div>
-    </div>
-
-    <div class="params-section">
-        <div class="section-header"><span>Situazione di partenza</span></div>
-
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">TFR già in azienda</span>
-                <span class="param-sub">saldo accumulato oggi</span>
-            </div>
-            <span class="param-value">
-                € <input type="number" id="s-tfr-initial" value="0" min="0" step="500" class="inline-input wide" oninput="updateAll()">
+    <h2 class="group-title">Tu e il lavoro</h2>
+    <div class="group-card">
+        <div class="field-row">
+            <label class="field-label" for="pension-years"><span class="field-name">Orizzonte</span></label>
+            <span class="stepper">
+                <button type="button" class="step-btn" onclick="stepInput('pension-years', -1)" aria-label="Diminuisci: Orizzonte">−</button>
+                <span class="field-box bare"><input type="number" id="pension-years" value="37" min="1" max="50" step="1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">anni</span></span>
+                <button type="button" class="step-btn" onclick="stepInput('pension-years', 1)" aria-label="Aumenta: Orizzonte">+</button>
             </span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Già nel fondo pensione</span>
-                <span class="param-sub">saldo accumulato oggi</span>
-            </div>
-            <span class="param-value">
-                € <input type="number" id="s-fp-initial" value="0" min="0" step="500" class="inline-input wide" oninput="updateAll()">
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="s-ral"><span class="field-name">RAL annua</span></label>
+            <span class="field-box wide"><span class="field-affix">€</span><input type="number" id="s-ral" value="35000" min="0" step="500" inputmode="decimal" class="field-input" oninput="updateAll()"></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Anni già nel fondo</span>
-                <span class="param-sub">per calcolo aliquota prestazione</span>
-            </div>
-            <span class="param-value">
-                <input type="number" id="s-fp-years-pre" value="0" min="0" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
-            </span>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">IRPEF marginale · media</span><span class="field-sub">scaglioni IRPEF 2026</span></span>
+            <span class="field-value"><span id="d-irpef-marg">—</span> · <span id="d-irpef-media">—</span></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Anni già lavorati</span>
-                <span class="param-sub">per tassazione separata TFR</span>
-            </div>
-            <span class="param-value">
-                <input type="number" id="s-work-years-pre" value="0" min="0" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="s-inflation"><span class="field-name">Inflazione media attesa</span><span class="field-sub">rivalutazione TFR e valori in euro di oggi</span></label>
+            <span class="field-box"><input type="number" id="s-inflation" value="2" min="0" max="10" step="0.5" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <span class="param-label">Orizzonte temporale</span>
-            <span class="param-value">
-                <input type="number" id="pension-years" value="37" min="1" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
-            </span>
+    <h2 class="group-title">Contributi al fondo</h2>
+    <div class="group-card">
+        <div class="field-row">
+            <label class="field-label" for="s-emp-pct"><span class="field-name">Dipendente</span><span class="field-sub" id="d-pension-yearly-dip"></span></label>
+            <span class="field-box"><input type="number" id="s-emp-pct" value="1" min="0" step="0.1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg></div>
-            <span class="param-label">RAL annua</span>
-            <span class="param-value">
-                € <input type="number" id="s-ral" value="35000" min="0" step="500" class="inline-input wide" oninput="updateAll()">
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="s-comp-pct"><span class="field-name">Azienda</span><span class="field-sub" id="d-pension-yearly-az"></span></label>
+            <span class="field-box"><input type="number" id="s-comp-pct" value="1" min="0" step="0.1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-
-        <div class="param-row computed">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">IRPEF marginale</span>
-                <span class="param-sub">deduzione 730 / scaglione attivo</span>
-            </div>
-            <span class="param-value purple" id="d-irpef-marg">23%</span>
-        </div>
-        <div class="param-row computed">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">IRPEF media</span>
-                <span class="param-sub">tassazione TFR a liquidazione</span>
-            </div>
-            <span class="param-value purple" id="d-irpef-media">23%</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Inflazione media attesa</span>
-                <span class="param-sub">rivalutazione TFR = 1,5% + 75% × inflazione</span>
-            </div>
-            <span class="param-value">
-                <input type="number" id="s-inflation" value="2" min="0" max="10" step="0.5" class="inline-input" oninput="updateAll()"> %
-            </span>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Totale annuo al fondo</span><span class="field-sub" id="d-pension-yearly-fund-sub"></span></span>
+            <span class="field-value" id="d-pension-yearly-fund">—</span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="section-header"><span>Contributi al fondo</span></div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Dipendente (% RAL)</span>
-                <span class="param-sub computed" id="d-pension-yearly-dip">€ 0 · anno</span>
-            </div>
-            <span class="param-value">
-                <input type="number" id="s-emp-pct" value="1" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
-            </span>
+    <h2 class="group-title">Il tuo fondo</h2>
+    <div class="group-card">
+        <div class="field-row">
+            <label class="field-label narrow" for="s-fund-type"><span class="field-name">Tipologia</span></label>
+            <select id="s-fund-type" class="field-select" oninput="updateAll()"><option value="custom">Personalizzato</option><option value="FPN">Fondo Negoziale</option><option value="FPA">Fondo Aperto</option><option value="PIP">PIP</option></select>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Azienda (% RAL)</span>
-                <span class="param-sub computed" id="d-pension-yearly-az">€ 0 · anno</span>
-            </div>
-            <span class="param-value">
-                <input type="number" id="s-comp-pct" value="1" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
-            </span>
+        <div class="field-row" id="s-fund-name-row" style="display:none">
+            <label class="field-label narrow" for="s-fund-name"><span class="field-name">Fondo</span></label>
+            <select id="s-fund-name" class="field-select"><option value="">— seleziona —</option></select>
         </div>
-
-        <div class="param-row computed">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Totale annuo al fondo</span>
-                <span class="param-sub computed" id="d-pension-yearly-fund-sub">—</span>
+        <div class="field-row" id="s-fund-comparto-row" style="display:none">
+            <label class="field-label narrow" for="s-fund-comparto"><span class="field-name">Comparto</span></label>
+            <select id="s-fund-comparto" class="field-select"><option value="">— seleziona —</option></select>
+        </div>
+        <div class="isc-box" id="s-isc-info" style="display:none">
+            <span class="field-sub">ISC · Indicatore Sintetico di Costo · <span id="s-isc-cat">—</span></span>
+            <div class="isc-grid">
+                <div class="isc-cell"><span>2 anni</span><strong id="s-isc-2">—</strong></div>
+                <div class="isc-cell"><span>5 anni</span><strong id="s-isc-5">—</strong></div>
+                <div class="isc-cell"><span>10 anni</span><strong id="s-isc-10">—</strong></div>
+                <div class="isc-cell accent"><span>35 anni</span><strong id="s-isc-35">—</strong></div>
             </div>
-            <span class="param-value purple" id="d-pension-yearly-fund">€ 0</span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="section-header"><span>Fondo COVIP</span></div>
-        <div class="settings-row">
-            <label>Tipologia</label>
-            <select id="s-fund-type" class="settings-select" oninput="updateAll()">
-                <option value="custom">Personalizzato</option>
-                <option value="FPN">Fondo Negoziale</option>
-                <option value="FPA">Fondo Aperto</option>
-                <option value="PIP">PIP</option>
-            </select>
+    <h2 class="group-title">Rendimento e fisco</h2>
+    <div class="group-card">
+        <div class="field-row">
+            <label class="field-label" for="pension-rate"><span class="field-name">Rendimento medio annuo</span></label>
+            <span class="field-box"><input type="number" id="pension-rate" value="4.5" min="0" max="30" step="0.1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-        <div class="settings-row" id="s-fund-name-row" style="display:none">
-            <label>Nome fondo</label>
-            <select id="s-fund-name" class="settings-select">
-                <option value="">— seleziona —</option>
-            </select>
+        <div class="field-row">
+            <label class="field-label" for="pension-costs"><span class="field-name">Costi fondo</span><span class="field-sub">ISC o costo annuo</span></label>
+            <span class="field-box"><input type="number" id="pension-costs" value="1.0" min="0" step="0.1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-        <div class="settings-row" id="s-fund-comparto-row" style="display:none">
-            <label>Comparto</label>
-            <select id="s-fund-comparto" class="settings-select">
-                <option value="">— seleziona —</option>
-            </select>
+        <div class="field-row">
+            <label class="field-label" for="pension-capgain"><span class="field-name">Tassazione rendimenti</span></label>
+            <span class="field-box"><input type="number" id="pension-capgain" value="20" min="0" step="0.5" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-        <div id="s-isc-info" style="display:none; padding: 12px 16px; border-top: 1px solid var(--border);">
-            <div style="font-size:0.72em; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px;">ISC (Indicatore Sintetico di Costo)</div>
-            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:8px;">
-                <div style="text-align:center"><div style="font-size:0.7em;color:var(--muted)">2 anni</div><div id="s-isc-2" style="font-weight:700;font-size:0.9em">—</div></div>
-                <div style="text-align:center"><div style="font-size:0.7em;color:var(--muted)">5 anni</div><div id="s-isc-5" style="font-weight:700;font-size:0.9em">—</div></div>
-                <div style="text-align:center"><div style="font-size:0.7em;color:var(--muted)">10 anni</div><div id="s-isc-10" style="font-weight:700;font-size:0.9em">—</div></div>
-                <div style="text-align:center"><div style="font-size:0.7em;color:var(--muted)">35 anni</div><div id="s-isc-35" style="font-weight:700;font-size:0.9em;color:var(--purple)">—</div></div>
-            </div>
-            <div id="s-isc-cat" style="font-size:0.75em; color:var(--muted);">—</div>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Tassazione prestazione</span><span class="field-sub" id="d-pension-prest-note">automatica (15% → 9%)</span></span>
+            <span class="field-value" id="d-pension-prest">—</span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="section-header"><span>Rendimento e fisco</span></div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <span class="param-label">Rendimento medio annuo</span>
-            <span class="param-value">
-                <input type="number" id="pension-rate" value="4.5" min="0" max="30" step="0.1" class="inline-input" oninput="updateAll()">%
-            </span>
+    <details class="group-card advanced" open>
+        <summary class="advanced-summary"><span>Situazione di partenza</span><svg class="advanced-chev" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></summary>
+        <div class="field-row">
+            <label class="field-label" for="s-tfr-initial"><span class="field-name">TFR già in azienda</span><span class="field-sub">saldo accumulato oggi</span></label>
+            <span class="field-box wide"><span class="field-affix">€</span><input type="number" id="s-tfr-initial" value="0" min="0" step="500" inputmode="decimal" class="field-input" oninput="updateAll()"></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
-            <span class="param-label">Costi fondo</span>
-            <span class="param-value">
-                <input type="number" id="pension-costs" value="1.0" min="0" step="0.1" class="inline-input" oninput="updateAll()">%
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="s-fp-initial"><span class="field-name">Già nel fondo pensione</span><span class="field-sub">saldo accumulato oggi</span></label>
+            <span class="field-box wide"><span class="field-affix">€</span><input type="number" id="s-fp-initial" value="0" min="0" step="500" inputmode="decimal" class="field-input" oninput="updateAll()"></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <span class="param-label">Tassazione rendimenti</span>
-            <span class="param-value">
-                <input type="number" id="pension-capgain" value="20" min="0" step="0.5" class="inline-input" oninput="updateAll()">%
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="s-fp-years-pre"><span class="field-name">Anni già nel fondo</span><span class="field-sub">per l’aliquota di prestazione</span></label>
+            <span class="field-box"><input type="number" id="s-fp-years-pre" value="0" min="0" max="50" step="1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">anni</span></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Tassazione prestazione</span>
-                <span class="param-sub" id="d-pension-prest-note">automatica (15% → 9%)</span>
-            </div>
-            <span class="param-value purple" id="d-pension-prest">15%</span>
+        <div class="field-row">
+            <label class="field-label" for="s-work-years-pre"><span class="field-name">Anni già lavorati</span><span class="field-sub">per la tassazione separata TFR</span></label>
+            <span class="field-box"><input type="number" id="s-work-years-pre" value="0" min="0" max="50" step="1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">anni</span></span>
+        </div>
+    </details>
+
+    <h2 class="group-title">Risparmio fiscale 730</h2>
+    <div class="group-card">
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Risparmio annuo</span></span>
+            <span class="field-value" id="d-pension-saving-yearly">—</span>
+        </div>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Risparmio totale</span><span class="field-sub" id="d-pension-saving-sub"></span></span>
+            <span class="field-value" id="d-pension-saving-total">—</span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="section-header"><span>Risparmio fiscale 730</span></div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <span class="param-label">Risparmio annuo</span>
-            <span class="param-value purple" id="d-pension-saving-yearly">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Risparmio totale</span>
-                <span class="param-sub" id="d-pension-saving-sub">—</span>
-            </div>
-            <span class="param-value purple" id="d-pension-saving-total">€ 0</span>
-        </div>
-    </div>
-
-    <div class="tip-card">
-        <span class="tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
-        <span class="tip-text" id="pension-tip">Inserisci i tuoi parametri per scoprire il tuo futuro finanziario.</span>
-    </div>
+    <p class="note-card"><svg class="note-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg><span id="pension-tip">Inserisci i tuoi parametri per scoprire il tuo futuro finanziario.</span></p>
 </div>
 
 <!-- ════════════════════ PAC ════════════════════ -->
 <div id="view-pac" class="view">
     <div class="view-header">
         <h1>PAC</h1>
-        <button class="reset-btn green" onclick="resetTab('pac', this)" title="Azzera campi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <button class="reset-btn" onclick="resetTab('pac', this)" aria-label="Azzera i campi" title="Azzera campi">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
     </div>
 
-    <div class="result-card green compact" style="text-align:center">
-        <div class="result-label" id="pac-label">Capitale netto stimato</div>
-        <div class="result-value" id="pac-result">€ 0</div>
-    </div>
-
-    <div class="params-section">
-        <div class="section-header"><span>Investimento</span></div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Già nel broker</span>
-                <span class="param-sub">capitale già investito oggi</span>
+    <section class="hero">
+        <div class="hero-label" id="pac-label">Capitale netto stimato</div>
+        <div class="hero-value" id="pac-result">€ 0</div>
+        <div class="hero-real" id="pac-real"></div>
+        <div class="summary-pill" role="group" aria-label="Come si arriva al totale">
+            <div class="pill-cols">
+                <div class="pill-col">
+                    <span class="pill-label">Versato</span>
+                    <span class="pill-value"><span id="d-pac-paid">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Rendimenti</span>
+                    <span class="pill-value"><span class="pill-op plus">+</span><span id="d-pac-gain-gross">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Tasse</span>
+                    <span class="pill-value"><span class="pill-op minus">−</span><span id="d-pac-taxes">€ 0</span></span>
+                </div>
             </div>
-            <span class="param-value">
-                € <input type="number" id="pac-initial" value="0" min="0" step="500" class="inline-input wide" oninput="updateAll()">
+            <div class="pill-foot"><span>Guadagno netto</span><span class="pill-strong">+ <span id="d-pac-gain-net">€ 0</span></span></div>
+        </div>
+    </section>
+
+    <h2 class="group-title">Investimento</h2>
+    <div class="group-card">
+        <div class="field-row">
+            <label class="field-label" for="pac-initial"><span class="field-name">Già nel broker</span><span class="field-sub">capitale già investito oggi</span></label>
+            <span class="field-box wide"><span class="field-affix">€</span><input type="number" id="pac-initial" value="0" min="0" step="500" inputmode="decimal" class="field-input" oninput="updateAll()"></span>
+        </div>
+        <div class="field-row">
+            <label class="field-label" for="pac-monthly"><span class="field-name">Versamento mensile</span></label>
+            <span class="stepper">
+                <button type="button" class="step-btn" onclick="stepInput('pac-monthly', -1)" aria-label="Diminuisci: Versamento mensile">−</button>
+                <span class="field-box bare"><span class="field-affix">€</span><input type="number" id="pac-monthly" value="300" min="0" step="10" inputmode="decimal" class="field-input" oninput="updateAll()"></span>
+                <button type="button" class="step-btn" onclick="stepInput('pac-monthly', 1)" aria-label="Aumenta: Versamento mensile">+</button>
             </span>
         </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-            <span class="param-label">Investimento mensile</span>
-            <span class="param-value">
-                € <input type="number" id="pac-monthly" value="300" min="0" step="10" class="inline-input" oninput="updateAll()">
+        <div class="field-row">
+            <label class="field-label" for="pac-years"><span class="field-name">Orizzonte</span></label>
+            <span class="stepper">
+                <button type="button" class="step-btn" onclick="stepInput('pac-years', -1)" aria-label="Diminuisci: Orizzonte">−</button>
+                <span class="field-box bare"><input type="number" id="pac-years" value="20" min="1" max="50" step="1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">anni</span></span>
+                <button type="button" class="step-btn" onclick="stepInput('pac-years', 1)" aria-label="Aumenta: Orizzonte">+</button>
             </span>
         </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <span class="param-label">Orizzonte temporale</span>
-            <span class="param-value">
-                <input type="number" id="pac-years" value="20" min="1" max="50" step="1" class="inline-input" oninput="updateAll()"> anni
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="pac-rate"><span class="field-name">Rendimento medio annuo</span></label>
+            <span class="field-box"><input type="number" id="pac-rate" value="6.0" min="0" max="30" step="0.1" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="section-header"><span>Rendimento e fisco</span></div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <span class="param-label">Rendimento medio annuo</span>
-            <span class="param-value">
-                <input type="number" id="pac-rate" value="6.0" min="0" max="30" step="0.1" class="inline-input" oninput="updateAll()">%
-            </span>
+    <details class="group-card advanced" open>
+        <summary class="advanced-summary"><span>Costi e fisco</span><svg class="advanced-chev" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></summary>
+        <div class="field-row">
+            <label class="field-label" for="pac-ter"><span class="field-name">Costi ETF (TER)</span><span class="field-sub">tipicamente 0,10% – 0,50%</span></label>
+            <span class="field-box"><input type="number" id="pac-ter" value="0.25" min="0" step="0.05" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Costi ETF (TER)</span>
-                <span class="param-sub">tipicamente 0,10% – 0,50%</span>
-            </div>
-            <span class="param-value">
-                <input type="number" id="pac-ter" value="0.25" min="0" step="0.05" class="inline-input" oninput="updateAll()">%
-            </span>
+        <div class="field-row">
+            <label class="field-label" for="pac-tax"><span class="field-name">Tassazione capital gain</span><span class="field-sub" id="d-pac-taxes-sub">più bollo 0,20% annuo sul controvalore</span></label>
+            <span class="field-box"><input type="number" id="pac-tax" value="26" min="0" step="0.5" inputmode="decimal" class="field-input" oninput="updateAll()"><span class="field-affix">%</span></span>
         </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <span class="param-label">Tassazione capital gain</span>
-            <span class="param-value">
-                <input type="number" id="pac-tax" value="26" min="0" step="0.5" class="inline-input" oninput="updateAll()">%
-            </span>
+    </details>
+
+    <h2 class="group-title">Obiettivo</h2>
+    <div class="group-card goal">
+        <div class="field-row">
+            <label class="field-label" for="pac-goal"><span class="field-name">Capitale netto desiderato</span><span class="field-sub">entro l'orizzonte impostato</span></label>
+            <span class="field-box wide"><span class="field-affix">€</span><input type="number" id="pac-goal" value="0" min="0" step="1000" inputmode="decimal" class="field-input" oninput="updateAll()"></span>
+        </div>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Versamento necessario</span><span class="field-sub" id="d-pac-goal-sub">quanto versare al mese per arrivarci</span></span>
+            <span class="field-value" id="d-pac-goal-monthly">—</span>
         </div>
     </div>
 
-    <div class="params-section">
-        <div class="section-header"><span>Riepilogo</span></div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-            <span class="param-label">Totale versato</span>
-            <span class="param-value green" id="d-pac-paid">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-            <span class="param-label">Guadagno lordo</span>
-            <span class="param-value green" id="d-pac-gain-gross">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Tasse e bollo</span>
-                <span class="param-sub" id="d-pac-taxes-sub">—</span>
-            </div>
-            <span class="param-value green" id="d-pac-taxes">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
-            <span class="param-label">Guadagno netto</span>
-            <span class="param-value green" id="d-pac-gain-net">€ 0</span>
-        </div>
-    </div>
-
-    <div class="tip-card">
-        <span class="tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
-        <span class="tip-text" id="pac-tip">Con un piccolo investimento costante, il tempo è il tuo miglior alleato.</span>
-    </div>
+    <p class="note-card"><svg class="note-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg><span id="pac-tip">Con un piccolo investimento costante, il tempo è il tuo miglior alleato.</span></p>
 </div>
 
 <!-- ════════════════════ CONTO DEPOSITO ════════════════════ -->
 <div id="view-cd" class="view">
     <div class="view-header">
         <h1>Conto deposito</h1>
-        <button class="reset-btn blue" onclick="resetTab('cd', this)" title="Azzera campi">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <button class="reset-btn" onclick="resetTab('cd', this)" aria-label="Azzera i vincoli" title="Azzera vincoli">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
     </div>
 
-    <div class="result-card blue compact" style="text-align:center">
-        <div class="result-label" id="cd-label">Capitale stimato tra 10 anni</div>
-        <div class="result-value" id="cd-result">€ 0</div>
-    </div>
+    <section class="hero">
+        <div class="hero-label" id="cd-label">Netto totale a scadenza</div>
+        <div class="hero-value" id="cd-result">€ 0</div>
+        <div class="hero-real" id="cd-real"></div>
+        <div class="summary-pill" role="group" aria-label="Come si arriva al totale">
+            <div class="pill-cols">
+                <div class="pill-col">
+                    <span class="pill-label">Depositato</span>
+                    <span class="pill-value"><span id="d-cd-total">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Interessi</span>
+                    <span class="pill-value"><span class="pill-op plus">+</span><span id="d-cd-pill-interest">€ 0</span></span>
+                </div>
+                <div class="pill-col">
+                    <span class="pill-label">Tasse</span>
+                    <span class="pill-value"><span class="pill-op minus">−</span><span id="d-cd-pill-taxes">€ 0</span></span>
+                </div>
+            </div>
+            <div class="pill-foot"><span id="d-cd-bonds-count">Nessun vincolo</span><span>Guadagno netto <span class="pill-strong">+ <span id="d-cd-pill-gain">€ 0</span></span></span></div>
+        </div>
+    </section>
 
-    <div class="params-section">
-        <div class="param-row clickable" onclick="toggleBondsEditor()">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Deposito</span>
-                <span class="param-sub" id="d-cd-bonds-count">0 vincoli</span>
-            </div>
-            <span class="param-value blue" id="d-cd-total">€ 0</span>
-            <span class="param-chevron" id="cd-bonds-chevron">▾</span>
+    <h2 class="group-title">I tuoi vincoli</h2>
+    <div id="cd-bonds-list"></div>
+    <button type="button" class="add-btn" onclick="addBond()">+ Aggiungi vincolo</button>
+
+    <h2 class="group-title">Rendimento oggi</h2>
+    <div class="group-card">
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Rendimento annuo lordo</span><span class="field-sub" id="d-cd-yearly-sub">—</span></span>
+            <span class="field-value" id="d-cd-yearly-gross">€ 0</span>
         </div>
-        <div class="bonds-editor" id="cd-bonds-editor">
-            <div id="cd-bonds-list"></div>
-            <button class="bond-add-btn" onclick="addBond()">+ Aggiungi vincolo</button>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Rendimento annuo netto</span></span>
+            <span class="field-value" id="d-cd-yearly-net">€ 0</span>
         </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
-            <span class="param-label">Totale a scadenza lordo</span>
-            <span class="param-value blue" id="d-cd-maturity-gross">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8 14 11 17 16 12"/></svg></div>
-            <span class="param-label">Totale a scadenza netto</span>
-            <span class="param-value blue" id="d-cd-maturity-net">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div class="param-label-stack">
-                <span class="param-label">Rendimento annuo lordo</span>
-                <span class="param-sub" id="d-cd-yearly-sub">—</span>
-            </div>
-            <span class="param-value blue" id="d-cd-yearly-gross">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <span class="param-label">Rendimento annuo netto</span>
-            <span class="param-value blue" id="d-cd-yearly-net">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <span class="param-label">Tasse annue</span>
-            <span class="param-value blue" id="d-cd-tax-yearly">€ 0</span>
-        </div>
-        <div class="param-row">
-            <div class="param-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div>
-            <span class="param-label">Totale tasse a scadenza</span>
-            <span class="param-value blue" id="d-cd-tax-total">€ 0</span>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Tasse e bollo annui</span></span>
+            <span class="field-value" id="d-cd-tax-yearly">€ 0</span>
         </div>
     </div>
 
-    <div class="tip-card">
-        <span class="tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg></span>
-        <span class="tip-text" id="cd-tip">La scelta più sicura per far crescere i tuoi risparmi in modo semplice.</span>
+    <h2 class="group-title">A scadenza</h2>
+    <div class="group-card">
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Totale lordo</span></span>
+            <span class="field-value" id="d-cd-maturity-gross">€ 0</span>
+        </div>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Totale netto</span></span>
+            <span class="field-value" id="d-cd-maturity-net">€ 0</span>
+        </div>
+        <div class="field-row computed">
+            <span class="field-label"><span class="field-name">Totale tasse e bollo</span></span>
+            <span class="field-value" id="d-cd-tax-total">€ 0</span>
+        </div>
     </div>
+
+    <p class="note-card"><svg class="note-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg><span id="cd-tip">Calcoli al netto del 26% di tasse sugli interessi e dello 0,20% annuo di bollo.</span></p>
 </div>
+</main>
 
 <!-- ════════════════════ BOTTOM NAV ════════════════════ -->
-<nav class="bottom-nav">
-    <button class="nav-item active gold" id="nav-home" onclick="switchTab('home')">
+<nav class="bottom-nav" aria-label="Sezioni">
+    <button class="nav-item active gold" id="nav-home" aria-current="page" onclick="switchTab('home')">
         <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
         Home
     </button>
@@ -495,14 +413,14 @@
 </nav>
 
 <!-- Script: ordine di caricamento importante -->
-<script src="js/utils.js"></script>
-<script src="js/pension.js"></script>
-<script src="js/pac.js"></script>
-<script src="js/cd.js"></script>
-<script src="js/home.js"></script>
-<script src="js/covip.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/app.js"></script>
+<script defer src="js/utils.js"></script>
+<script defer src="js/pension.js"></script>
+<script defer src="js/pac.js"></script>
+<script defer src="js/cd.js"></script>
+<script defer src="js/home.js"></script>
+<script defer src="js/covip.js"></script>
+<script defer src="js/auth.js"></script>
+<script defer src="js/app.js"></script>
 
 </body>
 </html>

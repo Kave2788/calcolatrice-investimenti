@@ -6,9 +6,31 @@ function switchTab(tab) {
         $('view-' + t).classList.remove('active');
         const nb = $('nav-' + t);
         nb.classList.remove('active','gold','purple','green','blue');
+        nb.removeAttribute('aria-current');
     });
     $('view-' + tab).classList.add('active');
     $('nav-' + tab).classList.add('active', NAV_COLOR[tab]);
+    $('nav-' + tab).setAttribute('aria-current', 'page');
+}
+
+// ── STEPPER − / + ──
+// Incrementa un input numerico del suo step, rispettando min/max, e notifica come un input manuale
+function stepInput(id, dir) {
+    const el = $(id);
+    if (!el) return;
+    const step = parseFloat(el.step) || 1;
+    const decimals = (String(el.step).split('.')[1] || '').length;
+    let v = (parseFloat(el.value) || 0) + dir * step;
+    if (el.min !== '') v = Math.max(parseFloat(el.min), v);
+    if (el.max !== '') v = Math.min(parseFloat(el.max), v);
+    el.value = v.toFixed(decimals);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// Data nell'intestazione della Home (es. "Sabato 17 ottobre")
+function renderHomeDate() {
+    const d = new Intl.DateTimeFormat('it-IT', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+    $('home-date').textContent = d.charAt(0).toUpperCase() + d.slice(1);
 }
 
 // ── ORCHESTRATORE ──
@@ -80,7 +102,7 @@ const VIEW_INPUTS = {
     pension: ['s-tfr-initial','s-fp-initial','s-fp-years-pre','s-work-years-pre',
               'pension-years','s-ral','s-inflation','s-emp-pct','s-comp-pct',
               'pension-rate','pension-costs','pension-capgain'],
-    pac:     ['pac-initial','pac-monthly','pac-years','pac-rate','pac-ter','pac-tax']
+    pac:     ['pac-initial','pac-monthly','pac-years','pac-rate','pac-ter','pac-tax','pac-goal']
 };
 
 function resetTab(tab, btn) {
@@ -118,6 +140,7 @@ if ('serviceWorker' in navigator) {
 
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', () => {
+    renderHomeDate();
     restoreInputs();
     loadBonds();
     renderBonds();

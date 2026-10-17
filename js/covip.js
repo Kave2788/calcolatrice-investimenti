@@ -803,11 +803,12 @@ function applyISC(tipo, fundName, idx, setInputs = true) {
         if (RENDIMENTI_DEFAULT[comp.k] !== undefined) $('pension-rate').value = RENDIMENTI_DEFAULT[comp.k];
     }
     const catLabel = { GAR:'Garantito', OBB:'Obbligazionario', BIL:'Bilanciato', AZN:'Azionario' };
-    $('s-isc-2').textContent  = comp.i2  + '%';
-    $('s-isc-5').textContent  = comp.i5  + '%';
-    $('s-isc-10').textContent = comp.i10 + '%';
-    $('s-isc-35').textContent = comp.i35 + '%';
-    $('s-isc-cat').textContent = (catLabel[comp.k] || comp.k) + ' · rend. medio ' + (RENDIMENTI_DEFAULT[comp.k] || '—') + '%';
+    const pct = v => String(v).replace('.', ',') + '%';   // decimali all'italiana
+    $('s-isc-2').textContent  = pct(comp.i2);
+    $('s-isc-5').textContent  = pct(comp.i5);
+    $('s-isc-10').textContent = pct(comp.i10);
+    $('s-isc-35').textContent = pct(comp.i35);
+    $('s-isc-cat').textContent = (catLabel[comp.k] || comp.k) + ' · rend. medio ' + (RENDIMENTI_DEFAULT[comp.k] !== undefined ? pct(RENDIMENTI_DEFAULT[comp.k]) : '—');
     info.style.display = 'block';
     updateAll();
 }

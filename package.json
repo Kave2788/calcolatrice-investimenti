@@ -1,12 +1,13 @@
 {
   "name": "calcolatrice-investimenti",
   "version": "1.0.0",
-  "description": "Calcolatrice fintech single-file per confrontare TFR, Conto Deposito e PAC",
+  "description": "PWA vanilla per confrontare TFR / fondo pensione, PAC e conto deposito (fisco italiano)",
   "main": "index.html",
   "scripts": {
     "dev": "npx serve . -p 8080",
     "start": "python3 -m http.server 8080",
-    "open": "open index.html"
+    "open": "open index.html",
+    "test": "node --test tests/*.test.js"
   },
   "keywords": [
     "fintech",
