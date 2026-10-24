@@ -117,7 +117,7 @@ function resetTab(tab, btn) {
     } else {
         (VIEW_INPUTS[tab] || []).forEach(id => {
             const el = $(id);
-            if (el) el.value = '';
+            if (el) el.value = el.defaultValue;   // default dell'HTML, non vuoto: niente aliquote a 0%
         });
         if (tab === 'pension') {
             $('s-fund-type').value = 'custom';

@@ -1,4 +1,6 @@
 // Test delle formule finanziarie con valori noti. Esegui: npm test (node --test, zero dipendenze)
+// Fuso italiano fisso: i bug delle date (ora legale) si vedono solo fuori da UTC
+process.env.TZ = 'Europe/Rome';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -7,13 +9,14 @@ const vm = require('node:vm');
 
 // Carica i moduli browser (scope globale) in un contesto isolato, senza DOM
 const ctx = vm.createContext({ Intl, Math, document: { getElementById: () => null } });
-for (const f of ['utils.js', 'pension.js', 'pac.js']) {
+for (const f of ['utils.js', 'pension.js', 'pac.js', 'cd.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8'), ctx, { filename: f });
 }
 const run = expr => vm.runInContext(expr, ctx);
 const { calcIrpef, prestazioneRate, deducibileDipendente, computePension, computePAC, solveMonthlyForGoal } =
     run('({ calcIrpef, prestazioneRate, deducibileDipendente, computePension, computePAC, solveMonthlyForGoal })');
 const realValue = run('realValue');
+const { addMonths, computeBond } = run('({ addMonths, computeBond })');
 
 const close = (actual, expected, eps = 0.01) =>
     assert.ok(Math.abs(actual - expected) <= eps, `atteso ${expected}, ottenuto ${actual}`);
@@ -128,4 +131,37 @@ test('pillola TFR: versato + rendimenti − tasse finali = netto totale', () => 
         close(r.paid + r.returns - r.taxesFinal, r.totalNet);
         assert.ok(r.taxesFinal >= 0);
     }
+});
+
+test('vincoli: addMonths resta sullo stesso giorno anche col cambio d ora', () => {
+    assert.equal(addMonths('2026-01-15', 6), '2026-07-15');   // solare → legale
+    assert.equal(addMonths('2026-04-15', 6), '2026-10-15');
+    assert.equal(addMonths('2026-03-01', 3), '2026-06-01');
+    assert.equal(addMonths('2026-01-31', 1), '2026-02-28');   // clamp a fine mese
+    assert.equal(addMonths('2024-01-31', 1), '2024-02-29');   // bisestile
+});
+
+test('vincoli: interesse semplice, tasse 26% e bollo 0,20%', () => {
+    const r = computeBond({ amount: 10000, rate: 3, start: '2026-01-01', end: '2027-01-01' });
+    const y = 365 / 365.25;
+    close(r.years, y, 1e-9);
+    close(r.grossInterest, 300 * y);
+    close(r.netTotal, 10000 + 300 * y * 0.74 - 20 * y);
+});
+
+test('vincoli: date vuote o invertite danno durata 0, mai NaN', () => {
+    for (const b of [{ start: '', end: '2027-01-01' }, { start: '2026-01-01', end: '' }, { start: '2027-01-01', end: '2026-01-01' }]) {
+        const r = computeBond({ amount: 10000, rate: 3, ...b });
+        assert.equal(r.years, 0);
+        assert.equal(r.netTotal, 10000);
+    }
+    assert.equal(computeBond({ amount: 1, rate: 1, start: '', end: '' }).validDates, false);
+});
+
+test('inflazione: 0% è un valore valido, il vuoto usa il default', () => {
+    const c = vm.createContext({ Intl, Math, document: { getElementById: () => ({ value: '0' }) } });
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'utils.js'), 'utf8'), c);
+    assert.equal(vm.runInContext('getInflation()', c), 0);
+    c.document.getElementById = () => ({ value: '' });
+    assert.equal(vm.runInContext('getInflation()', c), 2);
 });

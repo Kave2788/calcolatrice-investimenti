@@ -131,7 +131,7 @@ function readPensionParams() {
         rateGross:    gn('pension-rate'),
         costs:        gn('pension-costs'),
         capGain:      gn('pension-capgain'),
-        infl:         gn('s-inflation') || 2.0,
+        infl:         getInflation(),
         ral:          gn('s-ral'),
         pctDip:       gn('s-emp-pct'),
         pctAz:        gn('s-comp-pct'),

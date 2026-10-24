@@ -45,7 +45,8 @@ const pillReturns = (net, paid, taxes) => Math.round(net) - Math.round(paid) + M
 // ── POTERE D'ACQUISTO ──
 // Inflazione unica per tutta l'app (campo nella tab TFR, default 2%)
 const DEFAULT_INFLATION = 2;
-const getInflation = () => gn('s-inflation') || DEFAULT_INFLATION;
+// Campo vuoto → default; 0% è un valore valido (non va confuso col vuoto)
+const getInflation = () => { const v = parseFloat($('s-inflation')?.value); return isNaN(v) ? DEFAULT_INFLATION : v; };
 
 // Valore reale in euro di oggi: nominale / (1 + inflazione)^anni
 const realValue = (nominal, years, inflPct) => nominal / Math.pow(1 + inflPct / 100, Math.max(0, years));

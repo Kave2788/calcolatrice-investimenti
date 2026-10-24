@@ -24,7 +24,16 @@ function saveBonds() {
     localStorage.setItem(BONDS_KEY, JSON.stringify(BONDS));
 }
 
-function isoDate(d) { return d.toISOString().slice(0,10); }
+// Date sempre in ora locale: new Date('AAAA-MM-GG') sarebbe mezzanotte UTC e,
+// riconvertita con toISOString, perderebbe un giorno al passaggio all'ora legale
+function isoDate(d) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function parseISO(iso) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? new Date(+m[1], m[2] - 1, +m[3]) : new Date(NaN);
+}
 
 // Durate offerte dai conti deposito italiani (mesi). '' = scadenza personalizzata
 const BOND_DURATIONS = [3, 6, 12, 18, 24, 36, 48, 60];
@@ -32,7 +41,7 @@ const BOND_DURATIONS = [3, 6, 12, 18, 24, 36, 48, 60];
 // Somma mesi a una data ISO, con clamp sull'ultimo giorno del mese
 // (31 gennaio + 1 mese → 28/29 febbraio, non 2/3 marzo)
 function addMonths(iso, months) {
-    const d = new Date(iso);
+    const d = parseISO(iso);
     if (isNaN(d)) return iso;
     const day = d.getDate();
     d.setDate(1);
@@ -60,9 +69,12 @@ const CD_TAX_RATE = 0.26;
 const CD_BOLLO_RATE = 0.002;
 
 function computeBond(b) {
-    const start = new Date(b.start);
-    const end   = new Date(b.end);
-    const days  = Math.max(0, (end - start) / 86400000);
+    const start = parseISO(b.start);
+    const end   = parseISO(b.end);
+    // Data vuota o non valida → durata 0 (altrimenti il NaN arriverebbe fino al totale della Home)
+    const validDates = !isNaN(start) && !isNaN(end);
+    // round: i giorni tra due mezzanotti locali non sono interi se in mezzo c'è il cambio d'ora
+    const days  = validDates ? Math.max(0, Math.round((end - start) / 86400000)) : 0;
     const years = days / 365.25;
 
     const grossInterest = b.amount * (b.rate / 100) * years;
@@ -71,7 +83,7 @@ function computeBond(b) {
     const netInterest   = grossInterest - tax - bollo;
     const netTotal      = b.amount + netInterest;
 
-    return { years, grossInterest, tax, bollo, netInterest, netTotal };
+    return { validDates, years, grossInterest, tax, bollo, netInterest, netTotal };
 }
 
 // ── ADD / REMOVE / UPDATE ──
@@ -177,7 +189,7 @@ function renderBonds() {
                 </select>`)}${bondField('Scadenza', `<span class="field-box"><input type="date" class="field-input date bond-end" value="${b.end}"
                     oninput="updateBond(${b.id}, 'end', this.value)"></span>`)}${bondField('Tasso lordo', `<span class="field-box"><input type="number" class="field-input" min="0" max="30" step="0.05" inputmode="decimal" value="${b.rate}"
                     oninput="updateBond(${b.id}, 'rate', this.value)"><span class="field-affix">%</span></span>`)}
-            ${r.years <= 0 ? `<div class="field-row bond-warning" role="alert">La data di scadenza è precedente alla data di inizio</div>` : `
+            ${r.years <= 0 ? `<div class="field-row bond-warning" role="alert">${r.validDates ? 'La data di scadenza è precedente alla data di inizio' : 'Inserisci data di inizio e scadenza'}</div>` : `
             <div class="field-row computed">
                 <span class="field-label"><span class="field-name bond-net-label">Netto a scadenza (${r.years.toFixed(1).replace('.', ',')} anni)</span></span>
                 <span class="field-value bond-net-value">${fmtEur(r.netTotal)}</span>
@@ -209,7 +221,7 @@ function calcCD() {
         totalNet      += r.netTotal;
         totalGain     += r.netInterest;
         totalTax      += r.tax + r.bollo;
-        if (r.years > 0 && new Date(b.start) <= now && now < new Date(b.end)) {
+        if (r.years > 0 && parseISO(b.start) <= now && now < parseISO(b.end)) {
             const gAnno = b.amount * (b.rate / 100);            // interessi lordi di un anno pieno
             yearlyGross += gAnno;
             yearlyTax   += gAnno * CD_TAX_RATE + b.amount * CD_BOLLO_RATE;
